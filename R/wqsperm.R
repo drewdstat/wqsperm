@@ -79,13 +79,13 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
     }
     if (rs == T) {
       gwqs1 <- tryCatch({
-        suppressWarnings(gwqs::gwqs(formula = form1, data = newDat, mix_name = names(model$bres)[names(model$bres) %in%
+        suppressWarnings(gWQS::gwqs(formula = form1, data = newDat, mix_name = names(model$bres)[names(model$bres) %in%
                                                                                              model$final_weights$mix_name], q = nq, b = boots, rs = T, validation = 0, plan_strategy = plan_strategy,
                               b1_pos = b1_pos))
       }, error = function(e) NULL, warning = function(e) message("WQSRS failed"))
     } else {
       gwqs1 <- tryCatch({
-        suppressWarnings(gwqs::gwqs(formula = form1, data = newDat, mix_name = names(model$bres)[names(model$bres) %in%
+        suppressWarnings(gWQS::gwqs(formula = form1, data = newDat, mix_name = names(model$bres)[names(model$bres) %in%
                                                                                              model$final_weights$mix_name], q = nq, b = boots, validation = 0, plan_strategy = plan_strategy,
                               b1_pos = b1_pos))
       }, error = function(e) NULL, warning = function(e) message("WQS failed"))
@@ -150,7 +150,7 @@ wqsfullperm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 
                         plan_strategy = "multicore", returnbetas = TRUE, ...){
   
   # run main WQS 
-  gwqs_res_main <- gwqs::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
+  gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
                         b = b_main, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
                         family = "gaussian", plan_strategy = plan_strategy, ...) 
   
@@ -158,7 +158,7 @@ wqsfullperm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 
   gwqs_res_main$seed <- seed
   
   # run permutation test WQS 
-  gwqs_res_perm <- gwqs::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
+  gwqs_res_perm <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
                         b = b_perm, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
                         family = "gaussian", plan_strategy = plan_strategy, ...)
   

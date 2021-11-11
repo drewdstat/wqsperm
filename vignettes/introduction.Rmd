@@ -70,6 +70,7 @@ Note that there are limitations in the current version of the WQS permutation te
 
 ```{r, warning = F, message = F}
 library(gWQS)
+library(wqsperm)
 
 # mixture names 
 PCBs <- names(wqs_data)[1:34]

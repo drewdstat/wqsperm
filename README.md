@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# wqsperm
+# Weighted Quantile Sum (WQS) Permutation Test
 
 <!-- badges: start -->
 <!-- badges: end -->

@@ -1,14 +1,30 @@
-#' Title
+#' WQS permutation test
+#' 
+#' \code{wqsperm} takes a gwqs object as an input and runs the permutation test (Day 
+#' et al, 2021) to obtain an estimate for the p-value for the WQS ("beta_1") coefficient.  
+#' 
+#' Note that to use this function, there are some restrictions that users should be aware of. 
+#' For complete details, please reference the vignette (TODO: INCLUDE LINK).
 #'
-#' @param model 
-#' @param niter 
-#' @param boots 
-#' @param b1_pos 
-#' @param rs 
-#' @param plan_strategy 
-#' @param returnbetas 
+#' @param model A \code{gwqs} object as generated from the \code{gWQS} package.  
+#' @param niter Number of permutation test iterations. 
+#' @param boots Number of bootstrap samples for each permutation test \code{wqs} run.  
+#' @param b1_pos A logical value that determines whether beta values are positive 
+#' or negative.
+#' @param rs Logical value indicating whether random subset implementation should be 
+#' performed. 
+#' @param plan_strategy (Taken from gWQS documentation) A character value that allows to 
+#' choose the evaluation strategies for the plan function. You can choose among "sequential",
+#' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
+#' @param returnbetas Logical value on whether to include beta values for each permutation
+#' test run in the output. (TODO: Consider taking out and just returning it regardless?)
 #'
-#' @return
+#' @return \code{wqsperm} returns three objects: 
+#' 
+#' \item{pval}{The p-value obtained from the permutation test.}
+#' \item{testbeta1}{Reference WQS coefficient ("beta_1") value.}
+#' \item{betas}{Vector of beta values from each permutation test run.}
+
 #' @export
 #'
 #' @examples
@@ -121,11 +137,11 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
     retlist <- list(pval = pval(betas, mm$coef[2], b1_pos), testbeta1 = mm$coef[2])
   }
   
-  return(retlist)
+  retlist
 }
 
 
-#' Title
+#' Full wrapper WQS permutation test 
 #'
 #' @param formula 
 #' @param data 

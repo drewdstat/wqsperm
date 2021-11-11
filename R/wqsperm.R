@@ -100,7 +100,7 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
     return(retvec)
   }
   
-  pboptions(type = "timer")
+  pbapply::pboptions(type = "timer")
   betas <- pbapply::pbapply(reorgmat, 2, getbetas)
   
   if (any(is.na(betas))) {

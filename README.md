@@ -40,6 +40,8 @@ You can install the development version of wqsperm from
 devtools::install_github("jpspeng/wqsperm")
 ```
 
-## Example
+## Usage
 
-TODO
+Here is a [brief tutorial
+vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/working/vignettes/introduction.html)
+on how to use the wqsperm package.

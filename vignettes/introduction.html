@@ -175,8 +175,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="wqsfullperm" class="section level3">
 <h3><code>wqsfullperm</code></h3>
 <p>The second function <code>wqsfullperm</code> is a full wrapper function which implements the steps from the previous section.</p>
-<p>To use <code>wqsfullperm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <strong>reference WQS</strong> run and <code>b_perm</code>, the number of bootstraps for the <strong>permutation test WQS</strong> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of iterations</p>
-<p><strong>Question</strong>: How to deal with <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code>? Should give warning/error?</p>
+<p>To use <code>wqsfullperm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <strong>reference WQS</strong> run and <code>b_perm</code>, the number of bootstraps for the <strong>permutation test WQS</strong> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
 </div>
 <div id="limitations" class="section level3">
 <h3>Limitations</h3>

@@ -55,9 +55,7 @@ The permutation test will output the following in a list:
 
 The second function `wqsfullperm` is a full wrapper function which implements the steps from the previous section. 
 
-To use `wqsfullperm`, you must specify the same required arguments as needed in the `gwqs` call. For the bootstrap count `b` argument, you must specify `b_main`, the number of bootstraps for the **reference WQS** run and `b_perm`, the number of bootstraps for the **permutation test WQS** run. As with before, it is acceptable/standard for `b_main` $>$ `b_perm` for the sake of efficiency. Finally, you should indicate the number of iterations 
-
-**Question**: How to deal with `b_main` $>$ `b_perm`? Should give warning/error? 
+To use `wqsfullperm`, you must specify the same required arguments as needed in the `gwqs` call. For the bootstrap count `b` argument, you must specify `b_main`, the number of bootstraps for the **reference WQS** run and `b_perm`, the number of bootstraps for the **permutation test WQS** run. As with before, it is acceptable/standard for `b_main` $>$ `b_perm` for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs `niter`. 
 
 ### Limitations 
 

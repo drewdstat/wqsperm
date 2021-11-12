@@ -1,7 +1,7 @@
 #' WQS permutation test
 #' 
 #' \code{wqsperm} takes a gwqs object as an input and runs the permutation test (Day 
-#' et al, 2021) to obtain an estimate for the p-value for the WQS ("beta_1") coefficient.  
+#' et al, 2021) to obtain an estimate for the p-value significance for the WQS coefficient.  
 #' 
 #' Note that to use this function, there are some restrictions that users should be aware of. 
 #' For complete details, please reference the vignette (TODO: INCLUDE LINK).
@@ -9,9 +9,9 @@
 #' @param model A \code{gwqs} object as generated from the \code{gWQS} package.  
 #' @param niter Number of permutation test iterations. 
 #' @param boots Number of bootstrap samples for each permutation test \code{wqs} run.  
-#' @param b1_pos A logical value that determines whether beta values are positive 
+#' @param b1_pos A logical value that indicates whether beta values should be positive 
 #' or negative.
-#' @param rs Logical value indicating whether random subset implementation should be 
+#' @param rs A logical value indicating whether random subset implementation should be 
 #' performed. 
 #' @param plan_strategy (Taken from gWQS documentation) A character value that allows to 
 #' choose the evaluation strategies for the plan function. You can choose among "sequential",
@@ -22,7 +22,7 @@
 #' @return \code{wqsperm} returns three objects: 
 #' 
 #' \item{pval}{The p-value obtained from the permutation test.}
-#' \item{testbeta1}{Reference WQS coefficient ("beta_1") value.}
+#' \item{testbeta1}{Reference WQS coefficient value.}
 #' \item{betas}{Vector of beta values from each permutation test run.}
 
 #' @export
@@ -142,22 +142,38 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
 
 
 #' Full wrapper WQS permutation test 
-#'
-#' @param formula 
-#' @param data 
-#' @param mix_name 
-#' @param q 
-#' @param b_main 
-#' @param b_perm 
-#' @param b1_pos 
-#' @param rs 
-#' @param niter 
-#' @param seed 
-#' @param plan_strategy 
-#' @param returnbetas 
+#' 
+#' \code{wqsfullperm} is a full wrapper function that is a full implementation of 
+#' the Weighted Quantile Sum (WQS) method followed by the permutation test to determine 
+#' the significance of the WQS coefficient. 
+#' 
+#' @param formula An object of class formula. The wqs term must be included in the
+#' formula (e.g. y ~ wqs + ...).
+#' @param data The \code{data.frame} to be used in the WQS run. 
+#' @param mix_name A vector with the mixture column names. 
+#' @param q An integer to indicate the number of quantiles to split the mixture variables. 
+#' @param b_main The number of bootstraps for the main WQS run. 
+#' @param b_perm The number of bootstraps for the permutation test WQS runs. 
+#' @param b1_pos A logical value that indicates whether beta values should be positive 
+#' or negative.
+#' @param rs A logical value indicating whether random subset implementation should be 
+#' performed. 
+#' @param niter Number of permutation test iterations. 
+#' @param seed An integer to fix the seed.
+#' @param plan_strategy (Taken from gWQS documentation) A character value that allows to 
+#' choose the evaluation strategies for the plan function. You can choose among "sequential",
+#' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
+#' @param returnbetas Logical value on whether to include beta values for each permutation
+#' test run in the output. (TODO: Consider taking out and just returning it regardless?)
 #' @param ... 
 #'
-#' @return
+#' @return \code{wqsperm} returns three sublists: 
+#' 
+#' \item{gwqs_res_main}{Full output of all results from the main \code{wqs} run.}
+#' \item{gwqs_res_perm}{Full output of all results from the permutation test \code{wqs} run.}
+#' \item{perm_test_res}{Results from the permutation test, including \code{pval, 
+#' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
+#' function.}
 #' @export
 #'
 #' @examples

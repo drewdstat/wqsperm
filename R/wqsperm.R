@@ -24,7 +24,7 @@
 #' \item{pval}{The p-value obtained from the permutation test.}
 #' \item{testbeta1}{Reference WQS coefficient value.}
 #' \item{betas}{Vector of beta values from each permutation test run.}
-
+#' @import methods
 #' @export
 #'
 #' @examples

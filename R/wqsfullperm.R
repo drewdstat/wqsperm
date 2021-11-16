@@ -31,6 +31,7 @@
 #' \item{perm_test_res}{Results from the permutation test, including \code{pval, 
 #' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
 #' function.}
+#' @import methods
 #' @export
 #'
 #' @examples

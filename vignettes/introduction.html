@@ -154,9 +154,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The two main functions of the <code>wqsPerm</code> package are <code>wqsperm</code> and <code>wqsfullperm</code>.</p>
 <div id="wqsperm" class="section level3">
 <h3><code>wqsperm</code></h3>
-<p><code>wqsperm</code> uses a <code>gwqs</code> object (from the <code>gWQS</code> package) as an input. To use <code>wqsperm</code>, we first need to create a <code>gwqs</code> object for our <em>reference WQS</em> run, setting <code>validation = 0</code>, designating the number of bootstraps, and choosing a random seed to use for the remaining WQS function calls in the algorithm.</p>
-<p>Next, we need to create a second <code>gwqs</code> object for our <em>permutation test WQS</em> run with the same random seed and again setting <code>validation = 0</code>. However, for this second <code>gwqs</code> object, we may elect a bootstrap count lower than that in the reference object for the sake of efficiency.</p>
-<p>We will use this second <code>gwqs</code> object as an input for the <code>wqsperm</code> package. We will put this object in the <code>model</code> <code>gwqs</code> argument and set the following parameters:</p>
+<p><code>wqsperm</code> uses a <code>gwqs</code> object (from the <code>gWQS</code> package) as an input. To use <code>wqsperm</code>, we first need to run an initial <em>reference WQS regression</em> while setting <code>validation=0</code> and specifying a seed.</p>
+<p>Next, we need to create a second <code>gwqs</code> object for our <em>permutation test WQS regression</em> run with the <strong>same random seed</strong> and again setting <code>validation = 0</code>. However, for this second <code>gwqs</code> object, we may elect a bootstrap count lower than that in the reference object for the sake of efficiency.</p>
+<p>We will use this second <code>gwqs</code> object (<em>permutation test WQS regression</em>) as an input for the <code>wqsperm</code> package. We will put this object in the <code>model</code> <code>gwqs</code> argument and set the following parameters:</p>
 <ul>
 <li><code>niter</code>: Number of permutation test iterations</li>
 <li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration</li>
@@ -175,13 +175,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="wqsfullperm" class="section level3">
 <h3><code>wqsfullperm</code></h3>
 <p>The second function <code>wqsfullperm</code> is a full wrapper function which implements the steps from the previous section.</p>
-<p>To use <code>wqsfullperm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <strong>reference WQS</strong> run and <code>b_perm</code>, the number of bootstraps for the <strong>permutation test WQS</strong> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
+<p>To use <code>wqsfullperm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <em>reference WQS regression</em> run and <code>b_perm</code>, the number of bootstraps for the <em>permutation test WQS regression</em> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
 </div>
 <div id="limitations" class="section level3">
 <h3>Limitations</h3>
 <p>Note that there are limitations in the current version of the WQS permutation test algorithm and package implementation:</p>
 <ul>
-<li><strong>Linear regression only:</strong> The permutation test algorithm can only <code>gwqs</code> inputs where <code>family = gaussian</code>. A logistic regression version for the algorithm is currently in the works.</li>
+<li><strong>Linear regression only:</strong> The permutation test algorithm can only <code>gwqs</code> inputs where <code>family = gaussian</code> and <code>link = identity</code>. A logistic regression version for the algorithm is currently in the works.</li>
 <li><strong>Interaction terms or stratified weights:</strong> This permutation test is not yet set up to accomodate stratified weights or WQS interaction terms.</li>
 </ul>
 </div>
@@ -194,21 +194,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># mixture names </span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>PCBs <span class="ot">&lt;-</span> <span class="fu">names</span>(wqs_data)[<span class="dv">1</span><span class="sc">:</span><span class="dv">34</span>]</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create reference wqs object with 10 bootstraps </span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>wqs_ref <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>, </span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">10</span>, <span class="at">b1_pos =</span> T, <span class="at">bl_constr =</span> F, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># create permutation test wqs object with 5 bootstraps</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>wqs_perm <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>, </span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T, <span class="at">bl_constr =</span> F, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># run permutation test</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqsperm</span>(wqs_perm, <span class="at">niter =</span> <span class="dv">10</span>, <span class="at">boots =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2 failed model attempts&quot;</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># report reference wqs results, with permutation test p-value </span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>perm_test_res<span class="sc">$</span>pval</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TODO</span><span class="co">: Change bootstrap/iteration counts to be more realistic</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># create reference wqs object with 1000 bootstraps </span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>wqs_ref <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>, </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">10</span>, <span class="at">b1_pos =</span> T, <span class="at">plan_strategy =</span> <span class="st">&quot;multicore&quot;</span>, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># create permutation test wqs object with 200 bootstraps</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>wqs_perm <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>, </span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T, <span class="at">plan_strategy =</span> <span class="st">&quot;multicore&quot;</span>, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># run permutation test</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqsperm</span>(wqs_perm, <span class="at">niter =</span> <span class="dv">10</span>, <span class="at">boots =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2 failed model attempts&quot;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># report reference wqs results, with permutation test p-value </span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>perm_test_res<span class="sc">$</span>pval</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span></code></pre></div>
 </div>
 <div id="example-2-using-wqsfullperm" class="section level2">
 <h2>Example 2 (using <code>wqsfullperm</code>)</h2>

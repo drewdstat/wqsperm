@@ -6,8 +6,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of wqsperm is to implement a permutation test method for the weighted quantile sum (WQS)
-regression.
+The goal of wqsperm is to implement a permutation test method for the
+weighted quantile sum (WQS) regression.
 
 Weighted quantile sum regression is a statistical technique to evaluate
 the effect of complex exposure mixtures on an outcome (Carrico et
@@ -43,5 +43,5 @@ devtools::install_github("jpspeng/wqsperm")
 ## Usage
 
 Here is a [brief tutorial
-vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/main/vignettes/introduction.html)
+vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/working/vignettes/introduction.html)
 on how to use the wqsperm package.

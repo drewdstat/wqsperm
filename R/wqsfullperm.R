@@ -20,8 +20,6 @@
 #' @param plan_strategy (Taken from gWQS documentation) A character value that allows to 
 #' choose the evaluation strategies for the plan function. You can choose among "sequential",
 #' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
-#' @param returnbetas Logical value on whether to include beta values for each permutation
-#' test run in the output. (TODO: Consider taking out and just returning it regardless?)
 #' @param ... 
 #'
 #' @return \code{wqsperm} returns three sublists: 
@@ -31,34 +29,24 @@
 #' \item{perm_test_res}{Results from the permutation test, including \code{pval, 
 #' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
 #' function.}
-#' @import methods
+#' @import gWQS
 #' @export
 #'
 #' @examples
 wqsfullperm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
-                        b1_pos = TRUE, rs = FALSE, niter = 200, seed = 2016, 
-                        plan_strategy = "multicore", returnbetas = TRUE, ...){
+                        b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
+                        plan_strategy = "multicore", ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
                               b = b_main, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
                               family = "gaussian", plan_strategy = plan_strategy, ...) 
   
-  gwqs_res_main$b1_pos <- b1_pos
-  gwqs_res_main$seed <- seed
+  # run permutation test (using wqsperm function) 
+  results <- wqsperm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
+                     rs = rs, plan_strategy = plan_strategy, seed = seed)
   
-  # run permutation test WQS 
-  gwqs_res_perm <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
-                              b = b_perm, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
-                              family = "gaussian", plan_strategy = plan_strategy, ...)
-  
-  # run permutation test WQS (using wqsperm function) 
-  perm_test_res <- wqsperm(gwqs_res_perm, niter = niter, boots = b_perm, b1_pos = b1_pos, 
-                           rs = rs, plan_strategy = plan_strategy, returnbetas = returnbetas)
-  
-  # combine outputs
-  results <- list(gwqs_res_main = gwqs_res_main, gwqs_res_perm = gwqs_res_perm, 
-                  perm_test_res = perm_test_res)
+  class(results) <- "wqsperm"
   
   results
 }

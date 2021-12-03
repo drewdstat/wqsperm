@@ -60,12 +60,17 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
     # done in the data frame
     nq <- NULL
   }
-  
+
   # reference WQS run 
+  if (is.null(boots)){
+    boots <- length(model$bindex)
+  }
+  
   if (boots == length(model$bindex)){
     perm_ref_wqs <- model
     ref_beta1 <- mm$coef[2]
   }
+  
   else{
     perm_ref_wqs <- gwqs(formula = formula(mm), data = Data, mix_name = mix_name, 
                          q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
@@ -109,7 +114,7 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
                             q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
                             b1_pos = b1_pos))
     }, error = function(e) NULL, 
-    warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
     
     if (is.null(gwqs1))
       lm1 <- NULL else lm1 <- gwqs1$fit
@@ -140,8 +145,10 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
   
   perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, call = cl)
     
+  ret_ref_wqs <- ifelse(boots == length(model$bindex), NULL, perm_ref_wqs)
+  
   results <- list(gwqs_main = model, 
-                  gwqs_perm = perm_ref_wqs, 
+                  gwqs_perm = ret_ref_wqs, 
                   perm_test = perm_retlist)
   
   class(results) <- "wqsperm"
@@ -159,8 +166,10 @@ print.wqsperm <- function(x, ...){
       "\n")
 
   main_sum <- summary(x$gwqs_main)
+  final_weights <- x$gwqs_main$final_weights
   
   print(main_sum)
+
 }
 
 #' @rawNamespace S3method(summary, wqsperm)
@@ -173,7 +182,9 @@ summary.wqsperm <- function(x, ...){
       "\n")
   
   main_sum <- summary(x$gwqs_main)
+  final_weights <- x$gwqs_main$final_weights
   
   print(main_sum)
+
 }
 

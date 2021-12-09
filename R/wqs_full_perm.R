@@ -22,7 +22,7 @@
 #' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
 #' @param ... 
 #'
-#' @return \code{wqsperm} returns three sublists: 
+#' @return \code{wqs_full_perm} returns three sublists: 
 #' 
 #' \item{gwqs_res_main}{Full output of all results from the main \code{wqs} run.}
 #' \item{gwqs_res_perm}{Full output of all results from the permutation test \code{wqs} run.}
@@ -42,7 +42,7 @@ wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm 
                               b = b_main, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
                               family = "gaussian", plan_strategy = plan_strategy, ...) 
   
-  # run permutation test (using wqsperm function) 
+  # run permutation test (using wqs_perm function) 
   results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
                       rs = rs, plan_strategy = plan_strategy, seed = seed)
   

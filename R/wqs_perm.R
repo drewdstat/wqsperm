@@ -24,7 +24,7 @@
 #' \item{testbeta1}{Reference WQS coefficient value.}
 #' \item{betas}{Vector of beta values from each permutation test run.}
 #' @import gWQS
-#' @export wqsperm
+#' @export wqs_perm
 #'
 #' @examples
 wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
@@ -151,7 +151,7 @@ wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
                   gwqs_perm = ret_ref_wqs, 
                   perm_test = perm_retlist)
   
-  class(results) <- "wqsperm"
+  class(results) <- "wqs_perm"
   
   results
 }

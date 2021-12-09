@@ -30,12 +30,12 @@
 #' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
 #' function.}
 #' @import gWQS
-#' @export
+#' @export wqs_full_perm
 #'
 #' @examples
 wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
-                        b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
-                        plan_strategy = "multicore", ...){
+                          b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
+                          plan_strategy = "multicore", ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
@@ -46,7 +46,7 @@ wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm 
   results <- wqsperm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
                      rs = rs, plan_strategy = plan_strategy, seed = seed)
   
-  class(results) <- "wqsperm"
+  class(results) <- "wqs_perm"
   
   results
 }

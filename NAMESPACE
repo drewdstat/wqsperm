@@ -2,6 +2,7 @@
 
 S3method(print, wqsperm)
 S3method(summary, wqsperm)
-export(wqsfullperm)
-export(wqsperm)
+export(wqs_full_perm)
+export(wqs_perm)
+export(wqs_sim)
 import(gWQS)

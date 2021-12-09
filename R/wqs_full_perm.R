@@ -33,7 +33,7 @@
 #' @export
 #'
 #' @examples
-wqsfullperm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
+wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
                         b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
                         plan_strategy = "multicore", ...){
   

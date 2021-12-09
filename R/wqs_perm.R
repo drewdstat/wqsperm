@@ -27,7 +27,7 @@
 #' @export wqsperm
 #'
 #' @examples
-wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
+wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
                     plan_strategy = "multicore", seed = NULL) {
   
   if (class(model) == "gwqs") {

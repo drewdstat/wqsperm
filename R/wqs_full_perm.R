@@ -43,8 +43,8 @@ wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm 
                               family = "gaussian", plan_strategy = plan_strategy, ...) 
   
   # run permutation test (using wqsperm function) 
-  results <- wqsperm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
-                     rs = rs, plan_strategy = plan_strategy, seed = seed)
+  results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
+                      rs = rs, plan_strategy = plan_strategy, seed = seed)
   
   class(results) <- "wqs_perm"
   

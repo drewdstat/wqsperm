@@ -86,25 +86,20 @@ wqs_ref <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, validation
 perm_test_res <- wqs_perm(wqs_ref, niter = 10, boots = 5, b1_pos = T)
 ```
 
-```{r}
-print(perm_test_res)
-```
-
-
 ## Example 2 (using `wqsfullperm`)
 
 ```{r}
-# perm_test_res <- wqsfullperm(formula = yLBX ~ wqs, 
-#                              data = wqs_data, 
-#                              mix_name = PCBs, 
-#                              q = 10, 
-#                              b_main = 10, 
-#                              b_perm = 5, 
-#                              b1_pos = T, 
-#                              niter = 10, 
-#                              seed = 16, 
-#                              plan_strategy = "multicore", 
-#                              returnbetas = TRUE)
-# 
-# perm_test_res
+perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs,
+                               data = wqs_data,
+                               mix_name = PCBs,
+                               q = 10,
+                               b_main = 10,
+                               b_perm = 5,
+                               b1_pos = T,
+                               niter = 10,
+                               seed = 16,
+                               plan_strategy = "multicore",
+                               returnbetas = TRUE)
+
+perm_test_res
 ```

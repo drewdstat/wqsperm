@@ -156,10 +156,10 @@ wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
   results
 }
 
-#' @rawNamespace S3method(print, wqsperm)
+#' @rawNamespace S3method(print, wqs_perm)
 #' @rdname methods
 
-print.wqsperm <- function(x, ...){
+print.wqs_perm <- function(x, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
       x$perm_test$pval,
@@ -172,10 +172,10 @@ print.wqsperm <- function(x, ...){
 
 }
 
-#' @rawNamespace S3method(summary, wqsperm)
+#' @rawNamespace S3method(summary, wqs_perm)
 #' @rdname methods
 
-summary.wqsperm <- function(x, ...){
+summary.wqs_perm <- function(x, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
       x$perm_test$pval,

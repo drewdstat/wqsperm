@@ -34,7 +34,7 @@ The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_per
 
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` function and set the following additional parameters: 
 
-* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. In we do, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value. 
+* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. If we do, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value. 
 * `niter`: Number of permutation test iterations 
 * `b1_pos`: Whether beta_1 is restricted to the positive direction 
 * `rs`: Random subset implementation 

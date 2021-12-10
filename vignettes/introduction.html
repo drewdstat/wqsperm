@@ -156,7 +156,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><code>wqs_perm</code> uses a <code>gwqs</code> object (from the <code>gWQS</code> package) as an input. To use <code>wqs_perm</code>, we first need to run an initial <em>WQS regression</em> while setting <code>validation=0</code>.</p>
 <p>We will use this <code>gwqs</code> object as the <code>model</code> argument for the <code>wqs_perm</code> function and set the following additional parameters:</p>
 <ul>
-<li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. In this case, <code>wqs_perm</code> will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value.</li>
+<li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. In we do, <code>wqs_perm</code> will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value.</li>
 <li><code>niter</code>: Number of permutation test iterations</li>
 <li><code>b1_pos</code>: Whether beta_1 is restricted to the positive direction</li>
 <li><code>rs</code>: Random subset implementation</li>
@@ -168,9 +168,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><code>perm_test</code>
 <ul>
-<li><code>pval</code>: p-value for the proportion of permuted WQS coefficient values greater than the reference value.<br />
-</li>
-<li><code>testbeta</code>: reference beta1 value</li>
+<li><code>pval</code>: p-value for the proportion of permuted WQS coefficient values greater than the reference value</li>
+<li><code>testbeta</code>: reference WQS coefficient beta1 value</li>
 <li><code>betas</code>: a vector of beta values from each iteration of the permutation test</li>
 </ul></li>
 <li><code>gwqs_main</code>: main gWQS object (same as <code>model</code> input)</li>
@@ -180,7 +179,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="wqs_full_perm" class="section level3">
 <h3><code>wqs_full_perm</code></h3>
 <p>The second function <code>wqs_full_perm</code> is a full wrapper which implements the initial gWQS run and permutation test in one function call.</p>
-<p>To use <code>wqs_full_perm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <em>reference WQS regression</em> run and <code>b_perm</code>, the number of bootstraps for the <em>permutation test WQS regression</em> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
+<p>To use <code>wqs_full_perm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>, the number of bootstraps for the <em>main WQS regression</em> run and <code>b_perm</code>, the number of bootstraps for the <em>permutation test reference WQS regression</em> run. As with before, it is acceptable/standard for <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
 <p>The outputs of the <code>wqs_full_perm</code> function are the same as those in the <code>wqs_perm</code> function.</p>
 </div>
 <div id="limitations" class="section level3">
@@ -194,38 +193,92 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="example-1-using-wqs_perm" class="section level2">
 <h2>Example 1 (using <code>wqs_perm</code>)</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># library(gWQS)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># library(wqsperm)</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># # mixture names </span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># PCBs &lt;- names(wqs_data)[1:34]</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># # </span><span class="al">TODO</span><span class="co">: Change bootstrap/iteration counts to be more realistic</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># # create reference wqs object with 1000 bootstraps </span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># wqs_ref &lt;- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, validation = 0, </span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#                 b = 10, b1_pos = T, plan_strategy = &quot;multicore&quot;, family = &quot;gaussian&quot;, seed = 16)</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># # run permutation test</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># perm_test_res &lt;- wqs_perm(wqs_perm, niter = 10, boots = 5, b1_pos = T)</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># perm_test_res</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gWQS)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wqsperm)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># mixture names</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>PCBs <span class="ot">&lt;-</span> <span class="fu">names</span>(wqs_data)[<span class="dv">1</span><span class="sc">:</span><span class="dv">34</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TODO</span><span class="co">: Change bootstrap/iteration counts to be more realistic</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># create reference wqs object with 1000 bootstraps</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>wqs_ref <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">10</span>, <span class="at">b1_pos =</span> T, <span class="at">plan_strategy =</span> <span class="st">&quot;multicore&quot;</span>, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># run permutation test</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqs_perm</span>(wqs_ref, <span class="at">niter =</span> <span class="dv">10</span>, <span class="at">boots =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2 failed model attempts&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>perm_test_res</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Permutation test WQS coefficient p-value: </span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  0 </span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gwqs(formula = yLBX ~ wqs, data = wqs_data, mix_name = PCBs, </span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     b = 10, b1_pos = T, q = 10, validation = 0, family = &quot;gaussian&quot;, </span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     seed = 16, plan_strategy = &quot;multicore&quot;)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Deviance Residuals: </span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Min       1Q   Median       3Q      Max  </span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; -2.7430  -0.6272   0.0084   0.6278   3.6211  </span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) -4.61353    0.20398  -22.62   &lt;2e-16 ***</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; wqs          1.05118    0.04424   23.76   &lt;2e-16 ***</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 0.986061)</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 1047.74  on 499  degrees of freedom</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual deviance:  491.06  on 498  degrees of freedom</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AIC: 1415.9</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code></pre></div>
 </div>
 <div id="example-2-using-wqsfullperm" class="section level2">
 <h2>Example 2 (using <code>wqsfullperm</code>)</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># perm_test_res &lt;- wqsfullperm(formula = yLBX ~ wqs, </span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                              data = wqs_data, </span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#                              mix_name = PCBs, </span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#                              q = 10, </span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#                              b_main = 10, </span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#                              b_perm = 5, </span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#                              b1_pos = T, </span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#                              niter = 10, </span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                              seed = 16, </span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#                              plan_strategy = &quot;multicore&quot;, </span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#                              returnbetas = TRUE)</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># perm_test_res</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqs_full_perm</span>(<span class="at">formula =</span> yLBX <span class="sc">~</span> wqs,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">data =</span> wqs_data,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">mix_name =</span> PCBs,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">q =</span> <span class="dv">10</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">b_main =</span> <span class="dv">10</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">b_perm =</span> <span class="dv">5</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">b1_pos =</span> T,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">niter =</span> <span class="dv">10</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">seed =</span> <span class="dv">16</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                               <span class="at">plan_strategy =</span> <span class="st">&quot;multicore&quot;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                               <span class="at">returnbetas =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2 failed model attempts&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>perm_test_res</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Permutation test WQS coefficient p-value: </span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  0 </span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, </span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     b = b_main, b1_pos = b1_pos, q = q, validation = 0, family = &quot;gaussian&quot;, </span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     rs = rs, seed = seed, plan_strategy = plan_strategy, returnbetas = TRUE)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Deviance Residuals: </span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Min       1Q   Median       3Q      Max  </span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; -2.7430  -0.6272   0.0084   0.6278   3.6211  </span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) -4.61353    0.20398  -22.62   &lt;2e-16 ***</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; wqs          1.05118    0.04424   23.76   &lt;2e-16 ***</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 0.986061)</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 1047.74  on 499  degrees of freedom</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual deviance:  491.06  on 498  degrees of freedom</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AIC: 1415.9</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code></pre></div>
 </div>
 
 

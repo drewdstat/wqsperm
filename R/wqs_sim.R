@@ -1,35 +1,41 @@
-#' Title
+#' WQS Simulated Dataset Generator
 #'
-#' @param nmix
-#' @param ncovrt
-#' @param nobs
-#' @param ntruewts
-#' @param ntruecovrt
-#' @param corrstruct
-#' @param eps
-#' @param truewqsbeta
-#' @param truebeta0
-#' @param truewts
-#' @param truegamma
-#' @param constrdir
-#' @param seed
-#' @param q
-#' @param binix
-#' @param binixwt
-#' @param ixbeta
-#' @param bindiff
+#' @param nmix Number of mixture components in simulated dataset 
+#' @param ncovrt Number of covariates in simulated dataset
+#' @param nobs Number of observations in simulated dataset
+#' @param ntruewts Number of true weights (TODO: Can we collapse this into truewts?)
+#' @param ntruecovrt Number of true covariates (TODO: Can we collapse this into truegamma?)
+#' @param corrstruct Correlation matrix 
+#' @param eps Error term 
+#' @param truewqsbeta Simulated WQS beta_1 value 
+#' @param truebeta0 Simulated beta_0 value 
+#' @param truewts Simulated vector of mixture weights
+#' @param truegamma Simulated gamma vector 
+#' @param constrdir Constraint direction  
+#' @param seed Random seed 
+#' @param q Number of quantiles 
+#' @param binix TODO: REMOVE? 
+#' @param binixwt TODO: REMOVE? 
+#' @param ixbeta TODO:REMOVE? 
+#' @param bindiff TODO: REMOVE?
 #'
-#' @return
-#' @export
+#' @return \code{wqs_perm} returns a list of:
+#' \item{weights} Simulated weights
+#' \item{coef} Simulated beta coefficients 
+#' \item{Data} Simulated dataset 
+#' \item{yhat} Simulated yhat values 
+#' \item{wqs}
+#' \item{modmat}
+#' \item{Xmatquant}
+#' 
+#' @import mvtnorm, extraDistr
+#' @export wqs_sim
 #'
 #' @examples
 wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovrt = 5, 
                     corrstruct = 0, eps = 1, truewqsbeta = NULL, truebeta0 = NULL, 
                     truewts = NULL, truegamma = NULL, constrdir = "none", seed = 101,
                     q = 10, binix = F, binixwt = F, ixbeta = NULL, bindiff = NULL) {
-    
-    library(mvtnorm)
-    library(extraDistr)
     
     if (length(corrstruct) == 1) {
       Rho <- diag(nmix + ncovrt)

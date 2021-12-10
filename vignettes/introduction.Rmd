@@ -34,7 +34,7 @@ The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_per
 
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` function and set the following additional parameters: 
 
-* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. In this case, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value. 
+* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. In we do, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value. 
 * `niter`: Number of permutation test iterations 
 * `b1_pos`: Whether beta_1 is restricted to the positive direction 
 * `rs`: Random subset implementation 
@@ -46,8 +46,8 @@ The arguments `b1_pos` and `rs` should be consistent with the inputs chosen in t
 The permutation test will output the following in a nested list: 
 
 * `perm_test`
-  * `pval`: p-value for the proportion of permuted WQS coefficient values greater than the reference value.  
-  * `testbeta`: reference beta1 value 
+  * `pval`: p-value for the proportion of permuted WQS coefficient values greater than the reference value
+  * `testbeta`: reference WQS coefficient beta1 value 
   * `betas`: a vector of beta values from each iteration of the permutation test
 * `gwqs_main`: main gWQS object (same as `model` input)
 * `gwqs_perm`: permutation test reference gWQS object (NULL if same number of bootstraps)
@@ -56,7 +56,7 @@ The permutation test will output the following in a nested list:
 
 The second function `wqs_full_perm` is a full wrapper which implements the initial gWQS run and permutation test in one function call. 
 
-To use `wqs_full_perm`, you must specify the same required arguments as needed in the `gwqs` call. For the bootstrap count `b` argument, you must specify `b_main`, the number of bootstraps for the *reference WQS regression* run and `b_perm`, the number of bootstraps for the *permutation test WQS regression* run. As with before, it is acceptable/standard for `b_main` $>$ `b_perm` for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs `niter`.
+To use `wqs_full_perm`, you must specify the same required arguments as needed in the `gwqs` call. For the bootstrap count `b` argument, you must specify `b_main`, the number of bootstraps for the *main WQS regression* run and `b_perm`, the number of bootstraps for the *permutation test reference WQS regression* run. As with before, it is acceptable/standard for `b_main` $>$ `b_perm` for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs `niter`.
 
 The outputs of the `wqs_full_perm` function are the same as those in the `wqs_perm` function. 
 
@@ -87,6 +87,7 @@ perm_test_res <- wqs_perm(wqs_ref, niter = 10, boots = 5, b1_pos = T)
 
 perm_test_res
 ```
+
 
 ## Example 2 (using `wqsfullperm`)
 

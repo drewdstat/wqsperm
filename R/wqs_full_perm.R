@@ -24,11 +24,15 @@
 #'
 #' @return \code{wqs_full_perm} returns three sublists: 
 #' 
-#' \item{gwqs_res_main}{Full output of all results from the main \code{wqs} run.}
-#' \item{gwqs_res_perm}{Full output of all results from the permutation test \code{wqs} run.}
-#' \item{perm_test_res}{Results from the permutation test, including \code{pval, 
-#' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
-#' function.}
+#' TODO: Fix formatting here 
+#' \item{perm_test}
+#' \item{pval}{p-value for the proportion of permuted WQS coefficient values greater 
+#' than the reference value.}
+#' \item{testbeta1}{Reference WQS coefficient beta1 value.}
+#' \item{betas}{Vector of beta values from each permutation test run.}
+#' \item{gwqs_main} main gWQS object (same as model input)
+#' \item{gwqs_perm} permutation test reference gWQS object (NULL if same number of bootstraps
+#' as main gWQS object)
 #' @import gWQS
 #' @export wqs_full_perm
 #'

@@ -131,28 +131,6 @@ wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovr
     names(betas) <- c("beta0", "beta1")
   }
   
-  if (ncovrt > 0) {
-    modmat <- cbind(1, wqs, Sex, Xmatquant[, c((nmix + 1):(nmix + ncovrt))])
-    dimnames(modmat)[[2]] <-
-      c("Intercept", "wqs", "Sex", paste0("C", 1:ncovrt))
-    modmat <- cbind(modmat, modmat[, "wqs"] * modmat[, "Sex"])
-    dimnames(modmat)[[2]][ncol(modmat)] <- "wqs_Sex"
-    
-    betas <- c(beta0, wqsbeta, covrtbetas)
-    names(betas) <-
-      c("beta0",
-        "beta1",
-        paste0("gamma", 1:ncovrt))
-  } else {
-    modmat <- cbind(1, wqs, Sex)
-    dimnames(modmat)[[2]] <- c("Intercept", "wqs", "Sex")
-    modmat <- cbind(modmat, modmat[, "wqs"] * modmat[, "Sex"])
-    dimnames(modmat)[[2]][ncol(modmat)] <- "wqs_Sex"
-    
-    betas <- c(beta0, wqsbeta)
-    names(betas) <- c("beta0", "beta1")
-  }
-  
   yhat <- modmat %*% betas
   set.seed(seed)
   epsilon <- rnorm(nobs, sd = eps)

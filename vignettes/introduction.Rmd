@@ -62,7 +62,7 @@ The outputs of the `wqs_full_perm` function are the same as those in the `wqs_pe
 
 ### Limitations 
 
-Note that there are limitations in the current version of the WQS permutation test algorithm and package implementation: 
+Note that there are limitations in the current version of the WQS permutation test algorithm and package implementation:
 
 * **Linear regression only:** The permutation test algorithm can only `gwqs` inputs where `family = gaussian` and `link = identity`. A logistic regression version for the algorithm is currently in the works. 
 * **Interaction terms or stratified weights:**  This permutation test is not yet set up to accomodate stratified weights or WQS interaction terms.
@@ -106,3 +106,8 @@ perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs,
 
 perm_test_res
 ```
+
+```{r}
+plot(perm_test_res)$FullPlot
+```
+

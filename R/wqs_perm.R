@@ -150,6 +150,9 @@ wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
   pval <- calculate_pval(betas, ref_beta1, b1_pos)
   
   perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, call = cl)
+  
+  model$b1_pos <- b1_pos
+  perm_ref_wqs$b1_pos <- b1_pos
     
   ret_ref_wqs <- ifelse(boots == length(model$bindex), NULL, perm_ref_wqs)
   

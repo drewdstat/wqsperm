@@ -156,7 +156,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><code>wqs_perm</code> uses a <code>gwqs</code> object (from the <code>gWQS</code> package) as an input. To use <code>wqs_perm</code>, we first need to run an initial <em>WQS regression</em> while setting <code>validation=0</code>.</p>
 <p>We will use this <code>gwqs</code> object as the <code>model</code> argument for the <code>wqs_perm</code> function and set the following additional parameters:</p>
 <ul>
-<li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. In we do, <code>wqs_perm</code> will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value.</li>
+<li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. If we do, <code>wqs_perm</code> will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value.</li>
 <li><code>niter</code>: Number of permutation test iterations</li>
 <li><code>b1_pos</code>: Whether beta_1 is restricted to the positive direction</li>
 <li><code>rs</code>: Random subset implementation</li>
@@ -202,11 +202,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TODO</span><span class="co">: Change bootstrap/iteration counts to be more realistic</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># create reference wqs object with 1000 bootstraps</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>wqs_ref <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>wqs_main <span class="ot">&lt;-</span> <span class="fu">gwqs</span>(yLBX <span class="sc">~</span> wqs, <span class="at">mix_name =</span> PCBs, <span class="at">data =</span> wqs_data, <span class="at">q =</span> <span class="dv">10</span>, <span class="at">validation =</span> <span class="dv">0</span>,</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">b =</span> <span class="dv">10</span>, <span class="at">b1_pos =</span> T, <span class="at">plan_strategy =</span> <span class="st">&quot;multicore&quot;</span>, <span class="at">family =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">seed =</span> <span class="dv">16</span>)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># run permutation test</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqs_perm</span>(wqs_ref, <span class="at">niter =</span> <span class="dv">10</span>, <span class="at">boots =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>perm_test_res <span class="ot">&lt;-</span> <span class="fu">wqs_perm</span>(wqs_main, <span class="at">niter =</span> <span class="dv">10</span>, <span class="at">boots =</span> <span class="dv">5</span>, <span class="at">b1_pos =</span> T)</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;2 failed model attempts&quot;</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>perm_test_res</span>

@@ -24,7 +24,7 @@
 #' \item{modmat} Model matrix
 #' \item{Xq} Quantile transformed mixture components
 #' 
-#' @import mvtnorm, extraDistr
+#' @import mvtnorm extraDistr dae
 #' @export wqs_sim
 #'
 #' @examples

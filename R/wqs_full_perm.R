@@ -22,31 +22,35 @@
 #' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
 #' @param ... 
 #'
-#' @return \code{wqsperm} returns three sublists: 
+#' @return \code{wqs_full_perm} returns three sublists: 
 #' 
-#' \item{gwqs_res_main}{Full output of all results from the main \code{wqs} run.}
-#' \item{gwqs_res_perm}{Full output of all results from the permutation test \code{wqs} run.}
-#' \item{perm_test_res}{Results from the permutation test, including \code{pval, 
-#' testbeta1} and \code{betas}. For more information, see the outputs for the \code{wqsperm}
-#' function.}
+#' TODO: Fix formatting here 
+#' \item{perm_test}
+#' \item{pval}{p-value for the proportion of permuted WQS coefficient values greater 
+#' than the reference value.}
+#' \item{testbeta1}{Reference WQS coefficient beta1 value.}
+#' \item{betas}{Vector of beta values from each permutation test run.}
+#' \item{gwqs_main} main gWQS object (same as model input)
+#' \item{gwqs_perm} permutation test reference gWQS object (NULL if same number of bootstraps
+#' as main gWQS object)
 #' @import gWQS
-#' @export
+#' @export wqs_full_perm
 #'
 #' @examples
-wqsfullperm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
-                        b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
-                        plan_strategy = "multicore", ...){
+wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
+                          b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
+                          plan_strategy = "multicore", ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
                               b = b_main, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
                               family = "gaussian", plan_strategy = plan_strategy, ...) 
   
-  # run permutation test (using wqsperm function) 
-  results <- wqsperm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
-                     rs = rs, plan_strategy = plan_strategy, seed = seed)
+  # run permutation test (using wqs_perm function) 
+  results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
+                      rs = rs, plan_strategy = plan_strategy, seed = seed)
   
-  class(results) <- "wqsperm"
+  class(results) <- "wqs_perm"
   
   results
 }

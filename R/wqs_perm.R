@@ -1,6 +1,6 @@
 #' WQS permutation test
 #' 
-#' \code{wqsperm} takes a gwqs object as an input and runs the permutation test (Day 
+#' \code{wqs_perm} takes a gwqs object as an input and runs the permutation test (Day 
 #' et al, 2021) to obtain an estimate for the p-value significance for the WQS coefficient.  
 #' 
 #' Note that to use this function, there are some restrictions that users should be aware of. 
@@ -18,16 +18,22 @@
 #' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
 #' @param seed Random seed for the permutation test WQS reference run.  
 #'
-#' @return \code{wqsperm} returns three objects: 
+#' @return \code{wqs_perm} returns a nested object with three lists: 
 #' 
-#' \item{pval}{The p-value obtained from the permutation test.}
-#' \item{testbeta1}{Reference WQS coefficient value.}
+#' TODO: Fix formatting here 
+#' \item{perm_test}
+#' \item{pval}{p-value for the proportion of permuted WQS coefficient values greater 
+#' than the reference value.}
+#' \item{testbeta1}{Reference WQS coefficient beta1 value.}
 #' \item{betas}{Vector of beta values from each permutation test run.}
+#' \item{gwqs_main} main gWQS object (same as model input)
+#' \item{gwqs_perm} permutation test reference gWQS object (NULL if same number of bootstraps
+#' as main gWQS object)
 #' @import gWQS
-#' @export wqsperm
+#' @export wqs_perm
 #'
 #' @examples
-wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
+wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
                     plan_strategy = "multicore", seed = NULL) {
   
   if (class(model) == "gwqs") {
@@ -151,15 +157,15 @@ wqsperm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE,
                   gwqs_perm = ret_ref_wqs, 
                   perm_test = perm_retlist)
   
-  class(results) <- "wqsperm"
+  class(results) <- "wqs_perm"
   
   results
 }
 
-#' @rawNamespace S3method(print, wqsperm)
+#' @rawNamespace S3method(print, wqs_perm)
 #' @rdname methods
 
-print.wqsperm <- function(x, ...){
+print.wqs_perm <- function(x, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
       x$perm_test$pval,
@@ -172,10 +178,10 @@ print.wqsperm <- function(x, ...){
 
 }
 
-#' @rawNamespace S3method(summary, wqsperm)
+#' @rawNamespace S3method(summary, wqs_perm)
 #' @rdname methods
 
-summary.wqsperm <- function(x, ...){
+summary.wqs_perm <- function(x, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
       x$perm_test$pval,

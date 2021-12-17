@@ -172,8 +172,7 @@ print.wqs_perm <- function(x, ...){
       "\n")
 
   main_sum <- summary(x$gwqs_main)
-  final_weights <- x$gwqs_main$final_weights
-  
+
   print(main_sum)
 
 }
@@ -188,9 +187,190 @@ summary.wqs_perm <- function(x, ...){
       "\n")
   
   main_sum <- summary(x$gwqs_main)
-  final_weights <- x$gwqs_main$final_weights
-  
+
   print(main_sum)
 
 }
 
+
+#' @rawNamespace S3method(plot, wqs_perm)
+#' @rdname methods
+#' @import ggplot2 viridis cowplot
+
+plot.wqs_perm <- function(wqspermresults, FixedPalette=F, InclKey=F, AltMixName=NULL, 
+                          AltOutcomeName=NULL, ViridisPalette="D", StripTextSize=14, 
+                          AxisTextSize.Y=12, AxisTextSize.X=12, LegendTextSize=14, 
+                          PvalLabelSize=5, HeatMapTextSize=5) {
+
+  thisfit <- wqspermresults$gwqs_main$fit
+  b1pos <- wqspermresults$gwqs_main$b1_pos
+  if (b1pos)
+    thisdir <- "Positive"
+  else
+    thisdir <- "Negative"
+  if (!is.null(AltOutcomeName))
+    outname <- AltOutcomeName
+  else
+    outname <- as.character(attr(thisfit$terms, "variables")[[2]])
+  WQSResults <-
+    data.frame(
+      Outcome = outname,
+      Direction = thisdir,
+      Beta = thisfit$coef['wqs'],
+      LCI = suppressMessages(confint(thisfit)[2, 1]),
+      UCI = suppressMessages(confint(thisfit)[2, 2]),
+      pval = summary(thisfit)$coef["wqs", "Pr(>|t|)"],
+      PTp = wqspermresults$perm_test$pval
+    )
+  WQSResults$PTlabel <- paste0("PTp=", round(WQSResults$PTp, 3))
+  WQSResults$FacetLabel <- "Coefficient"
+  if (b1pos)
+    ylim <-
+    c(-WQSResults$Beta / 20,
+      WQSResults$Beta + (WQSResults$Beta / 4) + (WQSResults$Beta / 20))
+  else
+    ylim <- c(WQSResults$Beta - (WQSResults$Beta / 20), WQSResults$Beta /
+                20)
+  gg1 <-
+    ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
+    theme_bw() +
+    #geom_errorbar(aes(ymin=LCI,ymax=UCI),size=1,width=0.75)+
+    geom_hline(yintercept = 0) +
+    geom_text(aes(label = PTlabel, y = Beta + Beta / 4), size = PvalLabelSize) +
+    facet_grid(FacetLabel ~ Direction) +
+    coord_cartesian(ylim = ylim) +
+    theme(
+      strip.text = element_text(size = StripTextSize),
+      axis.text.y = element_text(size = AxisTextSize.Y),
+      axis.text.x = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks.x = element_blank()
+    )
+  WQSwts <-
+    wqspermresults$gwqs_main$final_weights[wqspermresults$gwqs_main$mix_name, ]
+  WQSwts$FacetLabel <- "Weights"
+  WQSwts$Outcome <- WQSResults$Outcome
+  WQSwts$Direction <- WQSResults$Direction
+  WQSwts$mix_name <-
+    factor(as.character(WQSwts$mix_name), levels = wqspermresults$gwqs_main$mix_name)
+  if (!is.null(AltMixName))
+    levels(WQSwts$mix_name) <- AltMixName
+  WQSwts$mix_name <-
+    factor(WQSwts$mix_name, levels = rev(levels(WQSwts$mix_name)))
+  names(WQSwts)[1:2] <- c("Exposure", "Weight")
+  if (FixedPalette) {
+    mypal <- viridis::viridis_pal(option = ViridisPalette)(4)
+    WQSwts$Wt <- WQSwts$Weight
+    # WQSwts$Weight<-round(WQSwts$Weight,1)
+    WQSwts$Weight <- factor(
+      ifelse(
+        WQSwts$Wt < 0.1,
+        "<0.1",
+        ifelse(
+          WQSwts$Wt >= 0.1 & WQSwts$Wt < 0.2,
+          "0.1-0.2",
+          ifelse(
+            WQSwts$Wt >= 0.2 & WQSwts$Wt < 0.3,
+            "0.2-0.3",
+            paste0("\u2265", "0.3")
+          )
+        )
+      ),
+      levels = c("<0.1", "0.1-0.2", "0.2-0.3", paste0("\u2265", "0.3"))
+    )
+    Virclr <- ifelse(
+      WQSwts$Weight == "<0.1",
+      mypal[1],
+      ifelse(
+        WQSwts$Weight == "0.1-0.2",
+        mypal[2],
+        ifelse(
+          WQSwts$Weight == "0.2-0.3",
+          mypal[3],
+          ifelse(is.na(WQSwts$Weight) == T, "grey50", mypal[4])
+        )
+      )
+    )
+    names(Virclr) <- as.character(WQSwts$Weight)
+    legplot <-
+      ggplot(data.frame(Weight = factor(
+        levels(WQSwts$Weight), levels = levels(WQSwts$Weight)
+      )),
+      aes(x = 1, y = Weight)) +
+      geom_tile(aes(fill = Weight)) + scale_fill_manual(values = mypal) +
+      theme(
+        legend.position = "bottom",
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 14)
+      )
+    l1 <- cowplot::get_legend(legplot)
+    
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
+                                                                   round(Wt, 2)), size = HeatMapTextSize) +
+      scale_fill_manual(values = Virclr) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text.x = element_blank(),
+        strip.text.y = element_text(size = StripTextSize),
+        axis.text.x = element_text(
+          angle = 45,
+          hjust = 1,
+          size = AxisTextSize.X
+        ),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.title = element_blank(),
+        strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
+        legend.position = "bottom",
+        legend.title = element_text(size = LegendTextSize, face = "bold"),
+        legend.text = element_text(size = LegendTextSize)
+      )
+  } else {
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
+                                                                   round(Weight, 2)), size = HeatMapTextSize) +
+      scale_fill_viridis_c(option = ViridisPalette) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text.x = element_blank(),
+        strip.text.y = element_text(size = StripTextSize),
+        axis.text.x = element_text(
+          angle = 45,
+          hjust = 1,
+          size = AxisTextSize.X
+        ),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.title = element_blank(),
+        strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
+        legend.position = "bottom",
+        legend.title = element_text(size = LegendTextSize, face = "bold"),
+        legend.text = element_text(size = LegendTextSize),
+        legend.key.size = unit(0.4, units = 'in')
+      )
+    l1 <- cowplot::get_legend(gg2)
+  }
+  
+  if (InclKey) {
+    gg2 <- gg2 + theme(legend.position = "none")
+    fullplot <-
+      cowplot::plot_grid(gg1,
+                         gg2,
+                         l1,
+                         ncol = 1,
+                         rel_heights = c(0.4, 0.6, 0.1))
+  } else {
+    gg2 <- gg2 + theme(legend.position = "none")
+    fullplot <-
+      cowplot::plot_grid(gg1,
+                         gg2,
+                         ncol = 1,
+                         rel_heights = c(0.4, 0.6))
+  }
+  
+  return(list(
+    FullPlot = fullplot,
+    CoefPlot = gg1,
+    WtPlot = gg2,
+    WtLegend = l1
+  ))
+}

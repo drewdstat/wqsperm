@@ -43,5 +43,5 @@ devtools::install_github("jpspeng/wqsperm")
 ## Usage
 
 Here is a [brief tutorial
-vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/working/vignettes/introduction.html)
+vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/main/vignettes/introduction.html)
 on how to use the wqsperm package.

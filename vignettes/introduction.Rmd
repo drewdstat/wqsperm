@@ -1,5 +1,7 @@
 ---
-title: "How to use the wqsPerm package"
+title: "How to use the wqsperm package"
+author: "Drew Day, James Peng"
+date: "1/8/2022"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
@@ -14,29 +16,67 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Introduction 
+# Introduction 
 
-*(Taken from Drew's paper)*
-
-Weighted quantile sum regression is a statistical technique to evaluate the effect of complex exposure mixtures on an outcome (Carrico et al. 2015). It is a single-index method which estimates a combined mixture sum effect as well as weights determining each individual mixture component's contributions to the sum effect. However, the model features a statistical power and Type I error (i.e., false positive) rate tradeoff, as there is a machine learning step to determine the weights that optimize the linear model fit. If the full data is used to estimate both the mixture component weights and the regression coefficients, there is high power but also a high false positive rate since coefficient p-values are calculated for a weighted mixture independent variable calculated using weights that have already been optimized to find a large effect. 
+Weighted quantile sum (WQS) regression is a statistical technique to evaluate the effect of complex exposure mixtures on an outcome (Carrico et al. 2015). It is a single-index method which estimates a combined mixture sum effect as well as weights determining each individual mixture component's contributions to the sum effect. However, the model features a statistical power and Type I error (i.e., false positive) rate tradeoff, as there is a machine learning step to determine the weights that optimize the linear model fit. If the full data is used to estimate both the mixture component weights and the regression coefficients, there is high power but also a high false positive rate since coefficient p-values are calculated for a weighted mixture independent variable calculated using weights that have already been optimized to find a large effect. 
 
 We recently proposed an alternative method based on a permutation test that should reliably allow for both high power and low false positive rate when utilizing WQS. The permutation test is a method of obtaining a p-value by simulating the null distribution through permutations of the data. The permutation test algorithm is described more in detail in (reference Drew's paper).
 
-## How to use the `wqsperm` package 
+## About WQS 
+
+The goal of WQS regression is to determine whether an exposure mixture is associated 
+with an outcome in a prespecified direction. It fits the following model: 
+
+$Y = \beta_0 + \beta_1(\sum_{i=1}^{c} w_i q_i) + z'\phi$ 
+
+Where $Y$ is the outcome variable, $\beta_0$ is the intercept, $\beta_1$ is the coefficient
+for the weighted quantile sum, $\sum_{i=1}^{c} w_i q_i$ is the weighted index for the set 
+of quantiled mixture exposures, $z$ is the set of covariates, and $\phi$ is the regression
+coefficients for the covariates. 
+
+A full description of the WQS methodology is described in (Carrico, 2015). 
+
+## Permutation Test 
+
+The WQS regression comprises of two steps, for which we typically split the data 
+into a training and validation set. Doing this reduces statistical power since 
+we are training our model on only part of the data. However, if we skip this 
+training/test split, we can get a skewed representation of uncertainty for the WQS 
+coefficient. The following permutation method resolves issue by allowing us to use the 
+full dataset for training and validation, and we subsequently apply a permutation 
+test to estimate the uncertainty:
+
+1. Run WQS regression without splitting the data, obtaining a WQS coefficient estimate. 
+
+2. Regress the outcome on all covariates but not the WQS variable. Then obtain the 
+predicted outcome values and their residuals from this regression. 
+
+3. Randomly permute the residual values and add them to the predicted outcome values
+to get a new outcome variable $y*$. 
+
+4. Run a WQS regression without splitting the data in which $y*$ replaces the vector of 
+observed outcome variables, obtaining an estimate for the WQS coefficient $\beta_1^*$. 
+
+5. Repeat steps 3 and 4. 
+
+6. Calculate the p-value by taking the proportion of $\beta_1^*$ values greater than 
+the WQS coefficient estimate obtained in Step 1. 
+
+# How to use the `wqsperm` package 
 
 The `wqsperm` package builds from the `gWQS` package.
 
 The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_perm`. 
 
-### `wqs_perm`
+## `wqs_perm`
 
 `wqs_perm` uses a `gwqs` object (from the `gWQS` package) as an input. To use `wqs_perm`, we first need to run an initial *WQS regression* while setting `validation=0`.  
 
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` function and set the following additional parameters: 
 
-* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. If we do, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference beta_1 value. 
+* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count `boots` lower than that specified in the `model` object for the sake of efficiency. If we do, `wqs_perm` will generate a permutation test reference WQS run with that number of bootstraps to determine the reference $\beta_1$ value. 
 * `niter`: Number of permutation test iterations 
-* `b1_pos`: Whether beta_1 is restricted to the positive direction 
+* `b1_pos`: Whether $\beta_1$ is restricted to the positive direction 
 * `rs`: Random subset implementation 
 * `plan_strategy`: Evaluation strategy for the plan function 
 * `seed`: Random seed 
@@ -47,12 +87,12 @@ The permutation test will output the following in a nested list:
 
 * `perm_test`
   * `pval`: p-value for the proportion of permuted WQS coefficient values greater than the reference value
-  * `testbeta`: reference WQS coefficient beta1 value 
-  * `betas`: a vector of beta values from each iteration of the permutation test
+  * `testbeta`: reference WQS coefficient $\beta_1$ value 
+  * `betas`: a vector of $\beta$ values from each iteration of the permutation test
 * `gwqs_main`: main gWQS object (same as `model` input)
 * `gwqs_perm`: permutation test reference gWQS object (NULL if same number of bootstraps)
 
-### `wqs_full_perm` 
+## `wqs_full_perm` 
 
 The second function `wqs_full_perm` is a full wrapper which implements the initial gWQS run and permutation test in one function call. 
 
@@ -60,16 +100,18 @@ To use `wqs_full_perm`, you must specify the same required arguments as needed i
 
 The outputs of the `wqs_full_perm` function are the same as those in the `wqs_perm` function. 
 
-### Limitations 
+## Limitations 
 
 Note that there are limitations in the current version of the WQS permutation test algorithm and package implementation:
 
 * **Linear regression only:** The permutation test algorithm can only `gwqs` inputs where `family = gaussian` and `link = identity`. A logistic regression version for the algorithm is currently in the works. 
 * **Interaction terms or stratified weights:**  This permutation test is not yet set up to accomodate stratified weights or WQS interaction terms.
 
+# Examples 
+
 ## Example 1 (using `wqs_perm`)
 
-```{r, warning = F, message = F}
+```{r wqs_perm, warning = F, message = F}
 library(gWQS)
 library(wqsperm)
 
@@ -89,9 +131,9 @@ perm_test_res
 ```
 
 
-## Example 2 (using `wqsfullperm`)
+## Example 2 (using `wqs_full_perm`)
 
-```{r}
+```{r wqs_full_perm}
 perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs,
                                data = wqs_data,
                                mix_name = PCBs,
@@ -107,7 +149,7 @@ perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs,
 perm_test_res
 ```
 
-```{r}
+```{r, fig.height = 10}
 plot(perm_test_res)$FullPlot
 ```
 

@@ -13,26 +13,41 @@
 #' or negative.
 #' @param rs A logical value indicating whether random subset implementation should be 
 #' performed. 
-#' @param plan_strategy (Taken from gWQS documentation) A character value that allows to 
-#' choose the evaluation strategies for the plan function. You can choose among "sequential",
-#' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote."
+#' @param plan_strategy Evaluation strategy for the plan function. You can choose among "sequential",
+#' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote." See gWQS documentation
+#' for full details. 
 #' @param seed Random seed for the permutation test WQS reference run.  
 #'
-#' @return \code{wqs_perm} returns a nested object with three lists: 
+#' @return \code{wqs_perm} returns a nested object with three sublists: 
 #' 
-#' TODO: Fix formatting here 
-#' \item{perm_test}
-#' \item{pval}{p-value for the proportion of permuted WQS coefficient values greater 
-#' than the reference value.}
-#' \item{testbeta1}{Reference WQS coefficient beta1 value.}
-#' \item{betas}{Vector of beta values from each permutation test run.}
-#' \item{gwqs_main} main gWQS object (same as model input)
-#' \item{gwqs_perm} permutation test reference gWQS object (NULL if same number of bootstraps
-#' as main gWQS object)
-#' @import gWQS
+#' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the proportion of 
+#' permuted WQS coefficient values greater than the reference value, (2) `testbeta1`: reference WQS coefficient beta1 value, 
+#' (3) `betas`: Vector of beta values from each permutation test run.}
+#' \item{gwqs_main}{Main gWQS object (same as model input)}
+#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number of bootstraps
+#' as main gWQS object)}
+#' @import gWQS ggplot2 viridis cowplot
 #' @export wqs_perm
 #'
 #' @examples
+#' library(gWQS)
+#'
+#' # mixture names
+#' PCBs <- names(wqs_data)[1:34]
+#' 
+#' # create reference wqs object with 1000 bootstraps
+#' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, validation = 0,
+#'                  b = 1000, b1_pos = T, plan_strategy = "multicore", family = "gaussian", seed = 16)
+#' 
+#' # run permutation test
+#' perm_test_res <- wqs_perm(wqs_main, niter = 1000, boots = 200, b1_pos = T)
+#'
+#' @references
+#' Loftus, C. T., Bush, N. R., Day, ... & LeWinn, K. Z. (2021). Exposure to prenatal 
+#' phthalate mixtures and neurodevelopment in the Conditions Affecting Neurocognitive 
+#' Development and Learning in Early childhood (CANDLE) study. Environment international, 
+#' 150, 106409.
+
 wqs_perm <- function(model, niter = 200, boots = 200, b1_pos = TRUE, rs = FALSE, 
                     plan_strategy = "multicore", seed = NULL) {
   
@@ -195,11 +210,25 @@ summary.wqs_perm <- function(x, ...){
 
 }
 
-
-#' @rawNamespace S3method(plot, wqs_perm)
-#' @rdname methods
-#' @import ggplot2 viridis cowplot
-
+#' Plotting method for wqsperm object 
+#'
+#' @param wqspermresults 
+#' @param FixedPalette 
+#' @param InclKey 
+#' @param AltMixName 
+#' @param AltOutcomeName 
+#' @param ViridisPalette 
+#' @param StripTextSize 
+#' @param AxisTextSize.Y 
+#' @param AxisTextSize.X 
+#' @param LegendTextSize 
+#' @param PvalLabelSize 
+#' @param HeatMapTextSize 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot.wqs_perm <- function(wqspermresults, FixedPalette=F, InclKey=F, AltMixName=NULL, 
                           AltOutcomeName=NULL, ViridisPalette="D", StripTextSize=14, 
                           AxisTextSize.Y=12, AxisTextSize.X=12, LegendTextSize=14, 

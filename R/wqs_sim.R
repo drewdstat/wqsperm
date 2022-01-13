@@ -1,28 +1,31 @@
-#' WQS Simulated Dataset Generator
+#' WQS simulated dataset generator
+#' 
+#' \code{wqs_sim} generates a simulated dataset of mixture components, covariates, and outcomes 
+#' based on an initial set of specifications. 
 #'
-#' @param nmix Number of mixture components in simulated dataset 
-#' @param ncovrt Number of covariates in simulated dataset
-#' @param nobs Number of observations in simulated dataset
-#' @param ntruewts Number of true weights (TODO: Can we collapse this into truewts?)
-#' @param ntruecovrt Number of true covariates (TODO: Can we collapse this into truegamma?)
-#' @param corrstruct Correlation matrix 
-#' @param eps Error term 
-#' @param truewqsbeta Simulated WQS beta_1 value 
-#' @param truebeta0 Simulated beta_0 value 
-#' @param truewts Simulated vector of mixture weights
-#' @param truegamma Simulated gamma vector 
-#' @param constrdir Constraint direction  
-#' @param seed Random seed 
-#' @param q Number of quantiles 
+#' @param nmix Number of mixture components in simulated dataset.
+#' @param ncovrt Number of covariates in simulated dataset.
+#' @param nobs Number of observations in simulated dataset.
+#' @param ntruewts Number of true weights.
+#' @param ntruecovrt Number of true covariates.
+#' @param corrstruct Correlation matrix.
+#' @param eps Error term.
+#' @param truewqsbeta Simulated WQS beta_1 value.
+#' @param truebeta0 Simulated beta_0 value.
+#' @param truewts Simulated vector of mixture weights.
+#' @param truegamma Simulated gamma vector.
+#' @param constrdir Constraint direction.
+#' @param seed Random seed.
+#' @param q Number of quantiles. 
 #'
 #' @return \code{wqs_perm} returns a list of:
-#' \item{weights} Simulated weights
-#' \item{coef} Simulated beta coefficients 
-#' \item{Data} Simulated dataset 
-#' \item{yhat} Simulated yhat values 
-#' \item{wqs} Quantile transformed mixture components multiplied by weights
-#' \item{modmat} Model matrix
-#' \item{Xq} Quantile transformed mixture components
+#' \item{weights}{Simulated weights.}
+#' \item{coef}{Simulated beta coefficients.}
+#' \item{Data}{Simulated dataset.}
+#' \item{yhat}{Simulated yhat values.}
+#' \item{wqs}{Quantile transformed mixture components multiplied by weights.}
+#' \item{modmat}{Model matrix.}
+#' \item{Xq}{Quantile transformed mixture components.}
 #' 
 #' @import mvtnorm extraDistr dae
 #' @export wqs_sim

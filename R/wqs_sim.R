@@ -6,15 +6,24 @@
 #' @param nmix Number of mixture components in simulated dataset.
 #' @param ncovrt Number of covariates in simulated dataset.
 #' @param nobs Number of observations in simulated dataset.
-#' @param ntruewts Number of true weights.
-#' @param ntruecovrt Number of true covariates.
+#' @param ntruewts Number of mixture components that have a non-zero association with
+#' the outcome (i.e. are not noise). 
+#' @param ntruecovrt Number of covariates that have a non-zero association with the 
+#' outcome (i.e. are not noise).
 #' @param corrstruct Correlation matrix.
 #' @param eps Error term.
-#' @param truewqsbeta Simulated WQS beta_1 value.
-#' @param truebeta0 Simulated beta_0 value.
-#' @param truewts Simulated vector of mixture weights.
-#' @param truegamma Simulated gamma vector.
-#' @param constrdir Constraint direction.
+#' @param truewqsbeta Simulated WQS beta_1 value. If NULL, then this value will be
+#' randomly sampled. 
+#' @param truebeta0 Simulated beta_0 value. If NULL, then this value will be
+#' randomly sampled. 
+#' @param truewts Simulated vector of mixture weights. If NULL, then this value will be
+#' randomly sampled. 
+#' @param truegamma Simulated gamma vector. If NULL, then this value will be
+#' randomly sampled. 
+#' @param rnd_wqsbeta_dir Direction of randomly sampled truewqsbeta (if truewqsbeta = NULL). 
+#' You can choose between "positive", "negative", or NULL. If "positive" or "negative", 
+#' the truewqsbeta will be sampled from a half normal distribution in either of those respective
+#' directions. If NULL, then truewqsbeta will be sampled from a normal distribution. 
 #' @param seed Random seed.
 #' @param q Number of quantiles. 
 #'
@@ -22,18 +31,18 @@
 #' \item{weights}{Simulated weights.}
 #' \item{coef}{Simulated beta coefficients.}
 #' \item{Data}{Simulated dataset.}
-#' \item{yhat}{Simulated yhat values.}
-#' \item{wqs}{Quantile transformed mixture components multiplied by weights.}
+#' \item{yhat}{simulated predicted y values from the data generating model.}
+#' \item{wqs}{Weighted quantile sum vector (quantile-transformed mixture components multiplied by weights).}
 #' \item{modmat}{Model matrix.}
-#' \item{Xq}{Quantile transformed mixture components.}
+#' \item{Xq}{Quantile-transformed mixture components.}
 #' 
-#' @import mvtnorm extraDistr dae
+#' @import mvtnorm extraDistr
 #' @export wqs_sim
 #'
 #' @examples
 wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovrt = 5, 
                     corrstruct = 0, eps = 1, truewqsbeta = NULL, truebeta0 = NULL, 
-                    truewts = NULL, truegamma = NULL, constrdir = "none", seed = 101,
+                    truewts = NULL, truegamma = NULL, rnd_wqsbeta_dir = "none", seed = 101,
                     q = 10) {
   
   if (length(corrstruct) == 1) {
@@ -110,9 +119,9 @@ wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovr
     wqsbeta <- truewqsbeta
   } else {
     set.seed(seed)
-    if (constrdir == "positive") {
+    if (rnd_wqsbeta_dir == "positive") {
       wqsbeta <- extraDistr::rhnorm(1)
-    } else if (constrdir == "negative") {
+    } else if (rnd_wqsbeta_dir == "negative") {
       wqsbeta <- extraDistr::rhnorm(1) * -1
     } else {
       wqsbeta <- rnorm(1)

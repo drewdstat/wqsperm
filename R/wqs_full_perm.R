@@ -16,13 +16,15 @@
 #' @param rs A logical value indicating whether random subset implementation should be 
 #' performed. 
 #' @param niter Number of permutation test iterations. 
-#' @param seed An integer to fix the seed.
+#' @param seed An integer to fix the seed. This will only impact the the initial WQS run and
+#' not the permutation test iterations. 
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose among "sequential",
 #' "transparent", "multisession", "multicore", "multiprocess", "cluster" and "remote." See gWQS documentation
 #' for full details. 
 #' @param ... Other parameters to put into the gwqs function call
 #'
-#' @return \code{wqs_full_perm} returns three sublists: 
+#' @return \code{wqs_full_perm} returns an object of class `wqs_perm`, which contains 
+#' three sublists: 
 #' 
 #' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the proportion of 
 #' permuted WQS coefficient values greater than the reference value, (2) `testbeta1`: reference WQS coefficient beta1 value, 
@@ -34,10 +36,15 @@
 #' @export wqs_full_perm
 #'
 #' @examples
-#' perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, mix_name = PCBs,
+#'  perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, mix_name = PCBs,
 #'                                q = 10, b_main = 10, b_perm = 5, b1_pos = T, niter = 10,
 #'                                 seed = 16, plan_strategy = "multicore", returnbetas = TRUE)
-wqs_full_perm <- function(formula, data, mix_name, q = 4, b_main = 1000, b_perm = 200,
+#' 
+#'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 are the recommended
+#'  # parameter values. This example has a lower b_main, b_perm, and niter in order to serve 
+#'  # as a shorter test run. 
+#'  
+wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000, b_perm = 200,
                           b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
                           plan_strategy = "multicore", ...){
   

@@ -39,7 +39,6 @@
 #' @import mvtnorm extraDistr
 #' @export wqs_sim
 #'
-#' @examples
 wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovrt = 5, 
                     corrstruct = 0, eps = 1, truewqsbeta = NULL, truebeta0 = NULL, 
                     truewts = NULL, truegamma = NULL, rnd_wqsbeta_dir = "none", seed = 101,

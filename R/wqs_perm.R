@@ -233,6 +233,8 @@ summary.wqs_perm <- function(x, ...){
 }
 
 #' Plotting method for wqsperm object 
+#' 
+#' Generates plots to help visualize and summarize WQS permutation test results. 
 #'
 #' @param wqspermresults An object of class `wqs_perm`.
 #' @param FixedPalette If true, the heatmap color key for the mixture weights has 
@@ -245,19 +247,27 @@ summary.wqs_perm <- function(x, ...){
 #' for the mixture components to be displayed on the heatmap y axis.
 #' @param AltOutcomeName Defaults to NULL. If not NULL, this is an alternative name 
 #' for the outcome to be displayed on the heatmap x axis.
-#' @param ViridisPalette  This is the color palette to be used for the viridisLite 
+#' @param ViridisPalette  Color palette to be used for the viridisLite 
 #' package-based coloring of the heatmap, with possible values from 'A' to 'E'. 
 #' Defaults to 'D'.
-#' @param StripTextSize This is the text size for the plot strip labels. Defaults to 14.
-#' @param AxisTextSize.Y This is the text size for the y axis text. Defaults to 12.
-#' @param AxisTextSize.X This is the text size for the x axis text. Defaults to 12.
-#' @param LegendTextSize This is the text size for the legend text. Defaults to 14.
-#' @param PvalLabelSize This is the geom_text size for the permutation test p-value 
+#' @param StripTextSize Text size for the plot strip labels. Defaults to 14.
+#' @param AxisTextSize.Y Text size for the y axis text. Defaults to 12.
+#' @param AxisTextSize.X Text size for the x axis text. Defaults to 12.
+#' @param LegendTextSize Text text size for the legend text. Defaults to 14.
+#' @param PvalLabelSize The geom_text size for the permutation test p-value 
 #' label. Defaults to 5.
-#' @param HeatMapTextSize This is the geom_text size for the mixture weight heatmap labels. 
+#' @param HeatMapTextSize The geom_text size for the mixture weight heatmap labels. 
 #' Defaults to 5.
 #'
-#' @return Returns a list of plots.
+#' @return Returns a list with 4 objects. 
+#' 
+#' \item{FullPlot}{Two plots stacked vertically: (1) Forest plot of the beta WQS 
+#' coefficient with the naive confidence intervals as well as the permutation test p-value
+#' (2) A heatmap of the WQS weights for each mixture component}
+#' \item{CoefPlot}{Forest plot of the beta WQS 
+#' coefficient with the naive confidence intervals as well as the permutation test p-value}
+#' \item{WtPlot}{A heatmap of the WQS weights for each mixture component}
+#' \item{WtLegend}{}
 #' @export
 #'
 plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixName = NULL,

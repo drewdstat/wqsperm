@@ -207,7 +207,7 @@ Finally, we can perform a permutation test on the WQS object.
 
 ```{r}
 # run permutation test
-perm_test_res1 <- wqs_perm(wqs_main1, niter = 10, boots = 5, b1_pos = T)
+perm_test_res1 <- wqs_perm(wqs_main1, niter = 10, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 
@@ -275,7 +275,7 @@ wqs_main2 <- gwqs(y ~ wqs, mix_name = mix_names2, data = sim_data2, q = 10, vali
                 seed = 16)
 
 # run permutation test
-perm_test_res2 <- wqs_perm(wqs_main2, niter = 10, boots = 5, b1_pos = T)
+perm_test_res2 <- wqs_perm(wqs_main2, niter = 10, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 

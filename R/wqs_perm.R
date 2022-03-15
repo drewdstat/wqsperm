@@ -72,11 +72,11 @@
 #' Development and Learning in Early childhood (CANDLE) study. Environment international, 
 #' 150, 106409.
 #' 
-wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, rs = FALSE, 
-                    plan_strategy = "multicore", seed = NULL) {
+wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr = TRUE, rs = FALSE, 
+                     plan_strategy = "multicore", seed = NULL) {
   
   if (class(model) == "gwqs") {
-    if (model$family$family != "gaussian" | model$family$link != "identity"){
+    if (!model$family$family %in% c("gaussian", "binomial") | model$family$link != "identity"){
       stop("The permutation test is currently only set up to accomodate the Gaussian family with an 
            identity link.")
     }
@@ -94,108 +94,192 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, rs = FALSE
   }  
   
   cl = match.call()
-  Data <- model$data[model$vindex, -which(names(model$data) %in% c("wqs", "wghts"))]
   yname <- as.character(formula(mm))[2]
   mix_name <- names(model$bres)[names(model$bres) %in% model$final_weights$mix_name]
-
-  if (!is.null(model$qi)) {
-    nq <- max(sapply(model$qi, length)) - 1
-  } else {
-    # this is for cases when there is no quantile transformation or it's already been
-    # done in the data frame
-    nq <- NULL
-  }
-
-  # reference WQS run 
-  if (is.null(boots)){
-    boots <- length(model$bindex)
-  }
   
-  if (boots == length(model$bindex)){
-    perm_ref_wqs <- model
-    ref_beta1 <- mm$coef[2]
-  }
-  
-  else{
-    perm_ref_wqs <- gwqs(formula = formula(mm), data = Data, mix_name = mix_name, 
-                         q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
-                         b1_pos = b1_pos, seed = seed)
+  if (model$family$family == "gaussian"){
+    Data <- model$data[model$vindex, -which(names(model$data) %in% c("wqs", "wghts"))]
     
-    ref_beta1 <- perm_ref_wqs$fit$coef[2]
-  }
-  
-  
-  if (length(mm$coef) > 2) {
-    # This is the permutation test algorithm when there are multiple independent variables in
-    # the model
-    lm_form <- formula(paste0(formchar[2], formchar[1], gsub("wqs + ", "", formchar[3], fixed = T)))
-    fit.partial <- lm(lm_form, data = Data)
-    partial.yhat <- predict(fit.partial)
-    partial.resid <- resid(fit.partial)
-    reorgmat <- matrix(NA, dim(Data)[1], niter)
-    reorgmat <- apply(reorgmat, 2, function(x) partial.yhat + sample(partial.resid, replace = F))
-  } else {
-    # This is the permutation test algorithm when there is only one independent variable in
-    # the model
-    reorgmat <- matrix(NA, dim(Data)[1], niter)
-    reorgmat <- apply(reorgmat, 2, function(x) sample(Data[, yname]))
-  }
-  
-  getbetas <- function(x) {
+    if (!is.null(model$qi)) {
+      nq <- max(sapply(model$qi, length)) - 1
+    } else {
+      # this is for cases when there is no quantile transformation or it's already been
+      # done in the data frame
+      nq <- NULL
+    }
     
-    newDat <- Data
-    newDat[, yname] <- x
-    names(newDat) <- c(names(Data))
-    formchar <- as.character(formula(mm))
+    # reference WQS run 
+    if (is.null(boots)){
+      boots <- length(model$bindex)
+    }
+    
+    if (boots == length(model$bindex)){
+      perm_ref_wqs <- model
+      ref_beta1 <- mm$coef[2]
+    }
+    
+    else{
+      perm_ref_wqs <- gwqs(formula = formula(mm), data = Data, mix_name = mix_name, 
+                           q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
+                           b1_pos = b1_pos, b1_constr = b1_constr, seed = seed)
+      
+      ref_beta1 <- perm_ref_wqs$fit$coef[2]
+    }
+    
     
     if (length(mm$coef) > 2) {
-      form1 <- formula(paste0(formchar[2], formchar[1], formchar[3]))
+      # This is the permutation test algorithm when there are multiple independent variables in
+      # the model
+      lm_form <- formula(paste0(formchar[2], formchar[1], gsub("wqs + ", "", formchar[3], fixed = T)))
+      fit.partial <- lm(lm_form, data = Data)
+      partial.yhat <- predict(fit.partial)
+      partial.resid <- resid(fit.partial)
+      reorgmat <- matrix(NA, dim(Data)[1], niter)
+      reorgmat <- apply(reorgmat, 2, function(x) partial.yhat + sample(partial.resid, replace = F))
     } else {
-      form1 <- formula(paste0(formchar[2], formchar[1], "wqs"))
+      # This is the permutation test algorithm when there is only one independent variable in
+      # the model
+      reorgmat <- matrix(NA, dim(Data)[1], niter)
+      reorgmat <- apply(reorgmat, 2, function(x) sample(Data[, yname]))
     }
     
-    gwqs1 <- tryCatch({
-      suppressWarnings(gwqs(formula = form1, data = newDat, mix_name = mix_name, 
-                            q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
-                            b1_pos = b1_pos))
-    }, error = function(e) NULL, 
+    getbetas <- function(x) {
+      
+      newDat <- Data
+      newDat[, yname] <- x
+      names(newDat) <- c(names(Data))
+      formchar <- as.character(formula(mm))
+      
+      if (length(mm$coef) > 2) {
+        form1 <- formula(paste0(formchar[2], formchar[1], formchar[3]))
+      } else {
+        form1 <- formula(paste0(formchar[2], formchar[1], "wqs"))
+      }
+      
+      gwqs1 <- tryCatch({
+        suppressWarnings(gwqs(formula = form1, data = newDat, mix_name = mix_name, 
+                              q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
+                              b1_pos = b1_pos, b1_constr = b1_constr))
+      }, error = function(e) NULL, 
       warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
-    
-    if (is.null(gwqs1))
-      lm1 <- NULL else lm1 <- gwqs1$fit
-    if (is.null(lm1)) {
-      retvec <- NA
-    } else {
-      retvec <- lm1$coef[2]
+      
+      if (is.null(gwqs1))
+        lm1 <- NULL else lm1 <- gwqs1$fit
+      if (is.null(lm1)) {
+        retvec <- NA
+      } else {
+        retvec <- lm1$coef[2]
+      }
+      return(retvec)
     }
-    return(retvec)
-  }
-  
-  pbapply::pboptions(type = "timer")
-  betas <- pbapply::pbapply(reorgmat, 2, getbetas)
-  
-  if (any(is.na(betas))) {
-    print(paste0(length(which(is.na(betas))), " failed model attempts"))
-  }
-  
-  calculate_pval <- function(x, true, posb1 = b1_pos) {
-    if (posb1) {
-      length(which(x > true))/length(betas)
-    } else {
-      length(which(x < true))/length(betas)
-    }
-  }
-  
-  pval <- calculate_pval(betas, ref_beta1, b1_pos)
-  
-  perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, call = cl)
-  
-  model$b1_pos <- b1_pos
-  perm_ref_wqs$b1_pos <- b1_pos
     
-  ret_ref_wqs <- ifelse(boots == length(model$bindex), NULL, perm_ref_wqs)
+    betas <- pbapply::pbapply(reorgmat, 2, getbetas)
+    
+    if (any(is.na(betas))) {
+      print(paste0(length(which(is.na(betas))), " failed model attempts"))
+    }
+    
+    calculate_pval <- function(x, true, posb1 = b1_pos) {
+      if (posb1) {
+        length(which(x > true))/length(betas)
+      } else {
+        length(which(x < true))/length(betas)
+      }
+    }
+    
+    pval <- calculate_pval(betas, ref_beta1, b1_pos)
+    
+    perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, call = cl)
+    
+    model$b1_pos <- b1_pos
+    perm_ref_wqs$b1_pos <- b1_pos
+    
+    ret_ref_wqs <- ifelse(boots == length(model$bindex), NULL, perm_ref_wqs)
+  } 
+  
+  else if (model$family$family == "binomial"){
+    
+    Data <- model$data[model$vindex,]
+    
+    initialfit <- function(m) {
+      newform <- formula(paste0(m, "~", gsub("wqs + ", "", formchar[3], fixed = T)))
+      fit.x1 <- lm(newform, data = Data)
+      return(resid(fit.x1))
+    }
+    
+    residmat <- sapply(model$mix_name, initialfit)
+    Data[, model$mix_name] <- residmat
+    
+    lwqs1 <- tryCatch({
+      suppressWarnings(gwqs(formula = formula(mm), data = Data, mix_name = model$mix_name,
+                            q = model$q, b = boots, rs = rs, validation = 0, plan_strategy = myplan,
+                            b1_pos = b1pos, family = model$family$family, seed = modelseed,
+                            b1_constr = b1constr))
+    }, error = function(e) NULL, 
+    warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+    
+    fit1 <- lwqs1$fit
+    fit2 <- glm(formula(paste0(yname, formchar[1], gsub("wqs + ", "", formchar[3], fixed = T))), 
+                data = Data, family = model$family$family)
+    
+    p.value.obs <- 1 - pchisq(abs(fit1$deviance - fit2$deviance), 1)
+    
+    reorgmatlist <- lapply(1:niter, function(x) residmat[sample(1:nrow(residmat), replace = F), ])
+    
+    getperms <- function(x) {
+      newDat <- Data
+      newDat[, model$mix_name] <- x
+      formchar <- as.character(formula(mm))
+      if (length(mm$coef) > 2) {
+        form1 <- formula(paste0(formchar[2], formchar[1], formchar[3]))
+      } else {
+        form1 <- formula(paste0(formchar[2], formchar[1], "wqs"))
+      }
+      
+      
+      gwqs1 <- tryCatch({
+        suppressWarnings(
+          gwqs(formula = form1, data = newDat, mix_name = mix_name, q = nq, b = boots,
+               rs = rs, validation = 0, plan_strategy = myplan, b1_pos = b1pos, family = model$family$family,
+               b1_constr = b1constr
+          )
+        )
+      }, error = function(e) NULL, 
+      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+      
+      
+      if (is.null(gwqs1))
+        lm1 <- NULL
+      else
+        lm1 <- gwqs1$fit
+      if (is.null(lm1)) {
+        retvec <- NA
+      } else {
+        devi <- lm1$deviance
+        pperm <- 1 - pchisq(abs(devi - fit2$deviance), 1)
+        retvec <- pperm
+      }
+      return(retvec)
+    }
+    
+    permstats <- pbapply::pbsapply(reorgmatlist, getperms)
+    if (any(is.na(permstats))) {
+      print(paste0(length(which(is.na(permstats))), " failed model attempts"))
+    }
+    
+    p0 <- length(permstats[which(permstats <= p.value.obs)]) / niter
+    p0.se <- sqrt(p0 * (1 - p0) / niter)
+    
+    perm_retlist <- list(pval = p0, 
+                         pval_se = p0.se,
+                         testpval = p.value.obs,
+                         permpvals = permstats)
+    
+    ret_ref_wqs <- NULL 
+  }
   
   results <- list(gwqs_main = model, 
+                  family = model$family$family,
                   gwqs_perm = ret_ref_wqs, 
                   perm_test = perm_retlist)
   
@@ -211,11 +295,11 @@ print.wqs_perm <- function(x, ...){
   cat("Permutation test WQS coefficient p-value: \n", 
       x$perm_test$pval,
       "\n")
-
+  
   main_sum <- summary(x$gwqs_main)
-
+  
   print(main_sum)
-
+  
 }
 
 #' @rawNamespace S3method(summary, wqs_perm)
@@ -227,9 +311,9 @@ summary.wqs_perm <- function(x, ...){
       "\n")
   
   main_sum <- summary(x$gwqs_main)
-
+  
   print(main_sum)
-
+  
 }
 
 #' Plotting method for wqsperm object 
@@ -275,194 +359,199 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
                           AxisTextSize.Y = 12, AxisTextSize.X = 12, LegendTextSize = 14,
                           PvalLabelSize = 5, HeatMapTextSize = 5) {
   
-    thisfit <- wqspermresults$gwqs_main$fit
-    b1pos <- wqspermresults$gwqs_main$b1_pos
-    if (b1pos)
-      thisdir <- "Positive"
-    else
-      thisdir <- "Negative"
-    if (!is.null(AltOutcomeName))
-      outname <- AltOutcomeName
-    else
-      outname <- as.character(attr(thisfit$terms, "variables")[[2]])
-    WQSResults <-
-      data.frame(
-        Outcome = outname,
-        Direction = thisdir,
-        Beta = thisfit$coef['wqs'],
-        LCI = suppressMessages(confint(thisfit)[2, 1]),
-        UCI = suppressMessages(confint(thisfit)[2, 2]),
-        pval = summary(thisfit)$coef["wqs", "Pr(>|t|)"],
-        PTp = wqspermresults$perm_test$pval
+  if (wqspermresults$family == "binomial"){
+    stop("Plotting functions for the logistic regression WQS permutation test 
+         have not yet been implemented.")
+  }
+  
+  thisfit <- wqspermresults$gwqs_main$fit
+  b1pos <- wqspermresults$gwqs_main$b1_pos
+  if (b1pos)
+    thisdir <- "Positive"
+  else
+    thisdir <- "Negative"
+  if (!is.null(AltOutcomeName))
+    outname <- AltOutcomeName
+  else
+    outname <- as.character(attr(thisfit$terms, "variables")[[2]])
+  WQSResults <-
+    data.frame(
+      Outcome = outname,
+      Direction = thisdir,
+      Beta = thisfit$coef['wqs'],
+      LCI = suppressMessages(confint(thisfit)[2, 1]),
+      UCI = suppressMessages(confint(thisfit)[2, 2]),
+      pval = summary(thisfit)$coef["wqs", "Pr(>|t|)"],
+      PTp = wqspermresults$perm_test$pval
+    )
+  WQSResults$PTlabel <- paste0("PTp=", signif(WQSResults$PTp, 3))
+  WQSResults$FacetLabel <- "Coefficient"
+  cirange <- WQSResults$UCI - WQSResults$LCI
+  widercirange <-
+    c(WQSResults$LCI - (WQSResults$LCI / 10),
+      WQSResults$UCI + (WQSResults$UCI / 10))
+  if (widercirange[1] < 0 & widercirange[2] > 0) {
+    gg1 <-
+      ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
+      theme_bw() +
+      geom_errorbar(aes(ymin = LCI, ymax = UCI),
+                    size = 1,
+                    width = 0.75) +
+      geom_hline(yintercept = 0) +
+      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text = element_text(size = StripTextSize),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks.x = element_blank()
       )
-    WQSResults$PTlabel <- paste0("PTp=", signif(WQSResults$PTp, 3))
-    WQSResults$FacetLabel <- "Coefficient"
-    cirange <- WQSResults$UCI - WQSResults$LCI
-    widercirange <-
-      c(WQSResults$LCI - (WQSResults$LCI / 10),
-        WQSResults$UCI + (WQSResults$UCI / 10))
-    if (widercirange[1] < 0 & widercirange[2] > 0) {
-      gg1 <-
-        ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
-        theme_bw() +
-        geom_errorbar(aes(ymin = LCI, ymax = UCI),
-                      size = 1,
-                      width = 0.75) +
-        geom_hline(yintercept = 0) +
-        geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
-        facet_grid(FacetLabel ~ Direction) +
-        theme(
-          strip.text = element_text(size = StripTextSize),
-          axis.text.y = element_text(size = AxisTextSize.Y),
-          axis.text.x = element_blank(),
-          axis.title = element_blank(),
-          axis.ticks.x = element_blank()
-        )
-    } else {
-      gg1 <-
-        ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
-        theme_bw() +
-        geom_errorbar(aes(ymin = LCI, ymax = UCI),
-                      size = 1,
-                      width = 0.75) +
-        geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
-        facet_grid(FacetLabel ~ Direction) +
-        theme(
-          strip.text = element_text(size = StripTextSize),
-          axis.text.y = element_text(size = AxisTextSize.Y),
-          axis.text.x = element_blank(),
-          axis.title = element_blank(),
-          axis.ticks.x = element_blank()
-        )
-    }
-    
-    WQSwts <-
-      wqspermresults$gwqs_main$final_weights[wqspermresults$gwqs_main$mix_name, ]
-    WQSwts$FacetLabel <- "Weights"
-    WQSwts$Outcome <- WQSResults$Outcome
-    WQSwts$Direction <- WQSResults$Direction
-    WQSwts$mix_name <-
-      factor(as.character(WQSwts$mix_name), levels = wqspermresults$gwqs_main$mix_name)
-    if (!is.null(AltMixName))
-      levels(WQSwts$mix_name) <- AltMixName
-    WQSwts$mix_name <-
-      factor(WQSwts$mix_name, levels = rev(levels(WQSwts$mix_name)))
-    names(WQSwts)[1:2] <- c("Exposure", "Weight")
-    if (FixedPalette) {
-      mypal <- viridis::viridis_pal(option = ViridisPalette)(4)
-      WQSwts$Wt <- WQSwts$Weight
-      WQSwts$Weight <- factor(
-        ifelse(
-          WQSwts$Wt < 0.1,
-          "<0.1",
-          ifelse(
-            WQSwts$Wt >= 0.1 & WQSwts$Wt < 0.2,
-            "0.1-0.2",
-            ifelse(
-              WQSwts$Wt >= 0.2 & WQSwts$Wt < 0.3,
-              "0.2-0.3",
-              paste0("\u2265", "0.3")
-            )
-          )
-        ),
-        levels = c("<0.1", "0.1-0.2", "0.2-0.3", paste0("\u2265", "0.3"))
+  } else {
+    gg1 <-
+      ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
+      theme_bw() +
+      geom_errorbar(aes(ymin = LCI, ymax = UCI),
+                    size = 1,
+                    width = 0.75) +
+      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text = element_text(size = StripTextSize),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks.x = element_blank()
       )
-      Virclr <- ifelse(
-        WQSwts$Weight == "<0.1",
-        mypal[1],
+  }
+  
+  WQSwts <-
+    wqspermresults$gwqs_main$final_weights[wqspermresults$gwqs_main$mix_name, ]
+  WQSwts$FacetLabel <- "Weights"
+  WQSwts$Outcome <- WQSResults$Outcome
+  WQSwts$Direction <- WQSResults$Direction
+  WQSwts$mix_name <-
+    factor(as.character(WQSwts$mix_name), levels = wqspermresults$gwqs_main$mix_name)
+  if (!is.null(AltMixName))
+    levels(WQSwts$mix_name) <- AltMixName
+  WQSwts$mix_name <-
+    factor(WQSwts$mix_name, levels = rev(levels(WQSwts$mix_name)))
+  names(WQSwts)[1:2] <- c("Exposure", "Weight")
+  if (FixedPalette) {
+    mypal <- viridis::viridis_pal(option = ViridisPalette)(4)
+    WQSwts$Wt <- WQSwts$Weight
+    WQSwts$Weight <- factor(
+      ifelse(
+        WQSwts$Wt < 0.1,
+        "<0.1",
         ifelse(
-          WQSwts$Weight == "0.1-0.2",
-          mypal[2],
+          WQSwts$Wt >= 0.1 & WQSwts$Wt < 0.2,
+          "0.1-0.2",
           ifelse(
-            WQSwts$Weight == "0.2-0.3",
-            mypal[3],
-            ifelse(is.na(WQSwts$Weight) == T, "grey50", mypal[4])
+            WQSwts$Wt >= 0.2 & WQSwts$Wt < 0.3,
+            "0.2-0.3",
+            paste0("\u2265", "0.3")
           )
         )
+      ),
+      levels = c("<0.1", "0.1-0.2", "0.2-0.3", paste0("\u2265", "0.3"))
+    )
+    Virclr <- ifelse(
+      WQSwts$Weight == "<0.1",
+      mypal[1],
+      ifelse(
+        WQSwts$Weight == "0.1-0.2",
+        mypal[2],
+        ifelse(
+          WQSwts$Weight == "0.2-0.3",
+          mypal[3],
+          ifelse(is.na(WQSwts$Weight) == T, "grey50", mypal[4])
+        )
       )
-      names(Virclr) <- as.character(WQSwts$Weight)
-      legplot <-
-        ggplot(data.frame(Weight = factor(
-          levels(WQSwts$Weight), levels = levels(WQSwts$Weight)
-        )),
-        aes(x = 1, y = Weight)) +
-        geom_tile(aes(fill = Weight)) + scale_fill_manual(values = mypal) +
-        theme(
-          legend.position = "bottom",
-          legend.title = element_text(size = 14, face = "bold"),
-          legend.text = element_text(size = 14)
-        )
-      l1 <- cowplot::get_legend(legplot)
-      
-      gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
-        geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
-                                                                     round(Wt, 2)), size = HeatMapTextSize) +
-        scale_fill_manual(values = Virclr) +
-        facet_grid(FacetLabel ~ Direction) +
-        theme(
-          strip.text.x = element_blank(),
-          strip.text.y = element_text(size = StripTextSize),
-          axis.text.x = element_text(size = AxisTextSize.X),
-          axis.text.y = element_text(size = AxisTextSize.Y),
-          axis.title = element_blank(),
-          strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
-          legend.position = "bottom",
-          legend.title = element_text(size = LegendTextSize, face = "bold"),
-          legend.text = element_text(size = LegendTextSize)
-        )
-    } else {
-      gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
-        geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
-                                                                     round(Weight, 2)), size = HeatMapTextSize) +
-        scale_fill_viridis_c(option = ViridisPalette) +
-        facet_grid(FacetLabel ~ Direction) +
-        theme(
-          strip.text.x = element_blank(),
-          strip.text.y = element_text(size = StripTextSize),
-          axis.text.x = element_text(size = AxisTextSize.X),
-          axis.text.y = element_text(size = AxisTextSize.Y),
-          axis.title = element_blank(),
-          strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
-          legend.position = "bottom",
-          legend.title = element_text(size = LegendTextSize, face = "bold"),
-          legend.text = element_text(size = LegendTextSize),
-          legend.key.size = unit(0.4, units = 'in')
-        )
-      l1 <- cowplot::get_legend(gg2)
-    }
+    )
+    names(Virclr) <- as.character(WQSwts$Weight)
+    legplot <-
+      ggplot(data.frame(Weight = factor(
+        levels(WQSwts$Weight), levels = levels(WQSwts$Weight)
+      )),
+      aes(x = 1, y = Weight)) +
+      geom_tile(aes(fill = Weight)) + scale_fill_manual(values = mypal) +
+      theme(
+        legend.position = "bottom",
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 14)
+      )
+    l1 <- cowplot::get_legend(legplot)
     
-    if (InclKey) {
-      gg2 <- gg2 + theme(legend.position = "none")
-      fullplot <-
-        cowplot::plot_grid(
-          cowplot::plot_grid(
-            gg1,
-            gg2,
-            ncol = 1,
-            align = "v",
-            rel_heights = c(0.4, 0.6)
-          ),
-          l1,
-          ncol = 1,
-          rel_heights = c(1, 0.1)
-        )
-    } else {
-      gg2 <- gg2 + theme(legend.position = "none")
-      fullplot <-
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
+                                                                   round(Wt, 2)), size = HeatMapTextSize) +
+      scale_fill_manual(values = Virclr) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text.x = element_blank(),
+        strip.text.y = element_text(size = StripTextSize),
+        axis.text.x = element_text(size = AxisTextSize.X),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.title = element_blank(),
+        strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
+        legend.position = "bottom",
+        legend.title = element_text(size = LegendTextSize, face = "bold"),
+        legend.text = element_text(size = LegendTextSize)
+      )
+  } else {
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
+                                                                   round(Weight, 2)), size = HeatMapTextSize) +
+      scale_fill_viridis_c(option = ViridisPalette) +
+      facet_grid(FacetLabel ~ Direction) +
+      theme(
+        strip.text.x = element_blank(),
+        strip.text.y = element_text(size = StripTextSize),
+        axis.text.x = element_text(size = AxisTextSize.X),
+        axis.text.y = element_text(size = AxisTextSize.Y),
+        axis.title = element_blank(),
+        strip.background.y = element_rect(fill = "grey85", colour = "grey20"),
+        legend.position = "bottom",
+        legend.title = element_text(size = LegendTextSize, face = "bold"),
+        legend.text = element_text(size = LegendTextSize),
+        legend.key.size = unit(0.4, units = 'in')
+      )
+    l1 <- cowplot::get_legend(gg2)
+  }
+  
+  if (InclKey) {
+    gg2 <- gg2 + theme(legend.position = "none")
+    fullplot <-
+      cowplot::plot_grid(
         cowplot::plot_grid(
           gg1,
           gg2,
           ncol = 1,
-          rel_heights = c(0.4, 0.6),
-          align = "v"
-        )
-    }
-    
-    return(list(
-      FullPlot = fullplot,
-      CoefPlot = gg1,
-      WtPlot = gg2,
-      WtLegend = l1
-    ))
-    
+          align = "v",
+          rel_heights = c(0.4, 0.6)
+        ),
+        l1,
+        ncol = 1,
+        rel_heights = c(1, 0.1)
+      )
+  } else {
+    gg2 <- gg2 + theme(legend.position = "none")
+    fullplot <-
+      cowplot::plot_grid(
+        gg1,
+        gg2,
+        ncol = 1,
+        rel_heights = c(0.4, 0.6),
+        align = "v"
+      )
   }
+  
+  return(list(
+    FullPlot = fullplot,
+    CoefPlot = gg1,
+    WtPlot = gg2,
+    WtLegend = l1
+  ))
+  
+}

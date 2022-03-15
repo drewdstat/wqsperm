@@ -45,16 +45,16 @@
 #'  # as a shorter test run. 
 #'  
 wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000, b_perm = 200,
-                          b1_pos = TRUE, rs = FALSE, niter = 200, seed = NULL, 
+                          b1_pos = TRUE, b1_constr = TRUE, rs = FALSE, niter = 200, seed = NULL, 
                           plan_strategy = "multicore", ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, q = q, 
-                              b = b_main, b1_pos = b1_pos, rs = rs, seed = seed, validation = 0,
+                              b = b_main, b1_pos = b1_pos, b1_constr = b1_constr, rs = rs, seed = seed, validation = 0,
                               family = "gaussian", plan_strategy = plan_strategy, ...) 
   
   # run permutation test (using wqs_perm function) 
-  results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, 
+  results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, b1_pos = b1_pos, b1_constr = b1_constr, 
                       rs = rs, plan_strategy = plan_strategy, seed = seed)
   
   class(results) <- "wqs_perm"

@@ -38,11 +38,12 @@
 #' three sublists: 
 #' 
 #' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the proportion of 
-#' permuted WQS coefficient values greater than the reference value, (2) `testbeta1`: reference WQS coefficient beta1 value, 
-#' (3) `betas`: Vector of beta values from each permutation test run.}
+#' permuted WQS coefficient values greater than the reference value, (2) `testbeta1`: 
+#' reference WQS coefficient beta1 value, (3) `betas`: Vector of beta values from 
+#' each permutation test run.}
 #' \item{gwqs_main}{Main gWQS object (same as model input)}
-#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number of bootstraps
-#' as main gWQS object)}
+#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number of 
+#' bootstraps as main gWQS object)}
 #' @import gWQS ggplot2 viridis cowplot
 #' @export wqs_perm
 #'
@@ -53,8 +54,9 @@
 #' PCBs <- names(wqs_data)[1:34]
 #' 
 #' # create reference wqs object with 1000 bootstraps
-#' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, validation = 0,
-#'                  b = 1000, b1_pos = T, plan_strategy = "multicore", family = "gaussian", seed = 16)
+#' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, 
+#'                  validation = 0, b = 1000, b1_pos = T, 
+#'                  plan_strategy = "multicore", family = "gaussian", seed = 16)
 #' 
 #' # run permutation test
 #' perm_test_res <- wqs_perm(wqs_main, niter = 10, b1_pos = T)
@@ -76,9 +78,9 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
                      plan_strategy = "multicore", seed = NULL) {
   
   if (class(model) == "gwqs") {
-    if (!model$family$family %in% c("gaussian", "binomial") | model$family$link != "identity"){
-      stop("The permutation test is currently only set up to accomodate the Gaussian family with an 
-           identity link.")
+    if (!model$family$family %in% c("gaussian", "binomial") | !model$family$link %in% c("identity", "logit")){
+      stop("The permutation test is currently only set up to accomodate the Gaussian or 
+           binomial families.")
     }
   } else stop("'model' must be of class 'gwqs' (see gWQS package).")
   
@@ -97,16 +99,16 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
   yname <- as.character(formula(mm))[2]
   mix_name <- names(model$bres)[names(model$bres) %in% model$final_weights$mix_name]
   
+  if (!is.null(model$qi)) {
+    nq <- max(sapply(model$qi, length)) - 1
+  } else {
+    # this is for cases when there is no quantile transformation or it's already been
+    # done in the data frame
+    nq <- NULL
+  }
+  
   if (model$family$family == "gaussian"){
     Data <- model$data[model$vindex, -which(names(model$data) %in% c("wqs", "wghts"))]
-    
-    if (!is.null(model$qi)) {
-      nq <- max(sapply(model$qi, length)) - 1
-    } else {
-      # this is for cases when there is no quantile transformation or it's already been
-      # done in the data frame
-      nq <- NULL
-    }
     
     # reference WQS run 
     if (is.null(boots)){
@@ -128,8 +130,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     
     
     if (length(mm$coef) > 2) {
-      # This is the permutation test algorithm when there are multiple independent variables in
-      # the model
+      # This is the permutation test algorithm when there are multiple independent 
+      # variables in the model
       lm_form <- formula(paste0(formchar[2], formchar[1], gsub("wqs + ", "", formchar[3], fixed = T)))
       fit.partial <- lm(lm_form, data = Data)
       partial.yhat <- predict(fit.partial)
@@ -137,8 +139,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
       reorgmat <- matrix(NA, dim(Data)[1], niter)
       reorgmat <- apply(reorgmat, 2, function(x) partial.yhat + sample(partial.resid, replace = F))
     } else {
-      # This is the permutation test algorithm when there is only one independent variable in
-      # the model
+      # This is the permutation test algorithm when there is only one independent 
+      # variable in the model
       reorgmat <- matrix(NA, dim(Data)[1], niter)
       reorgmat <- apply(reorgmat, 2, function(x) sample(Data[, yname]))
     }
@@ -198,7 +200,6 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
   } 
   
   else if (model$family$family == "binomial"){
-    
     Data <- model$data[model$vindex,]
     
     initialfit <- function(m) {
@@ -212,9 +213,9 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     
     lwqs1 <- tryCatch({
       suppressWarnings(gwqs(formula = formula(mm), data = Data, mix_name = model$mix_name,
-                            q = model$q, b = boots, rs = rs, validation = 0, plan_strategy = myplan,
-                            b1_pos = b1pos, family = model$family$family, seed = modelseed,
-                            b1_constr = b1constr))
+                            q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
+                            b1_pos = b1_pos, family = model$family$family, seed = seed,
+                            b1_constr = b1_constr))
     }, error = function(e) NULL, 
     warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
     
@@ -238,14 +239,11 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
       
       
       gwqs1 <- tryCatch({
-        suppressWarnings(
-          gwqs(formula = form1, data = newDat, mix_name = mix_name, q = nq, b = boots,
-               rs = rs, validation = 0, plan_strategy = myplan, b1_pos = b1pos, family = model$family$family,
-               b1_constr = b1constr
-          )
-        )
-      }, error = function(e) NULL, 
-      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+        suppressWarnings(gwqs(formula = form1, data = newDat, mix_name = mix_name, q = model$q, b = boots,
+               rs = rs, validation = 0, plan_strategy = plan_strategy, b1_pos = b1_pos, family = model$family$family,
+               b1_constr = b1_constr)
+          )}, error = function(e) NULL, 
+        warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
       
       
       if (is.null(gwqs1))
@@ -275,6 +273,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
                          testpval = p.value.obs,
                          permpvals = permstats)
     
+    model$b1_pos <- b1_pos
+
     ret_ref_wqs <- NULL 
   }
   
@@ -359,11 +359,8 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
                           AxisTextSize.Y = 12, AxisTextSize.X = 12, LegendTextSize = 14,
                           PvalLabelSize = 5, HeatMapTextSize = 5) {
   
-  if (wqspermresults$family == "binomial"){
-    stop("Plotting functions for the logistic regression WQS permutation test 
-         have not yet been implemented.")
-  }
-  
+  wqs_fam <- wqspermresults$family
+
   thisfit <- wqspermresults$gwqs_main$fit
   b1pos <- wqspermresults$gwqs_main$b1_pos
   if (b1pos)
@@ -374,6 +371,14 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
     outname <- AltOutcomeName
   else
     outname <- as.character(attr(thisfit$terms, "variables")[[2]])
+  
+  if (wqs_fam == "gaussian"){
+    pval <- summary(thisfit)$coef["wqs", "Pr(>|t|)"]
+  }
+  else if (wqs_fam == "binomial"){
+    pval <- summary(thisfit)$coef["wqs", "Pr(>|z|)"]
+  }
+  
   WQSResults <-
     data.frame(
       Outcome = outname,
@@ -381,7 +386,7 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
       Beta = thisfit$coef['wqs'],
       LCI = suppressMessages(confint(thisfit)[2, 1]),
       UCI = suppressMessages(confint(thisfit)[2, 2]),
-      pval = summary(thisfit)$coef["wqs", "Pr(>|t|)"],
+      pval = pval,
       PTp = wqspermresults$perm_test$pval
     )
   WQSResults$PTlabel <- paste0("PTp=", signif(WQSResults$PTp, 3))

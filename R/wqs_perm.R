@@ -1,49 +1,52 @@
 #' WQS permutation test
 #' 
-#' \code{wqs_perm} takes a `gwqs` object as an input and runs the permutation test (Day 
-#' et al, 2022) to obtain an estimate for the p-value significance for the WQS coefficient.  
+#' \code{wqs_perm} takes a `gwqs` object as an input and runs the permutation 
+#' test (Day et al, 2022) to obtain an estimate for the p-value significance for 
+#' the WQS coefficient.  
 #' 
-#' `wqs_perm` uses a `gwqs` object (from the gWQS package) as an input. To use `wqs_perm`,
-#' we first need to run an initial WQS regression while setting `validation=0`. We will 
-#' use this `gwqs` object as the model argument for the `wqs_perm` function. 
+#' `wqs_perm` uses a `gwqs` object (from the gWQS package) as an input. To use 
+#' `wqs_perm`, we first need to run an initial WQS regression while setting 
+#' `validation=0`. We will use this `gwqs` object as the model argument for the 
+#' `wqs_perm` function. 
 #' 
-#' The argument `boots` is the number of bootstraps for the WQS run in each permutation 
-#' test iteration. Note that we may elect a bootstrap count `boots` lower than that 
-#' specified in the model object for the sake of efficiency. If `boots` is not specified, 
-#' then we will use the same bootstrap count in the permutation test WQS runs as that 
-#' specified in the model argument.
+#' The argument `boots` is the number of bootstraps for the WQS run in each 
+#' permutation test iteration. Note that we may elect a bootstrap count `boots` 
+#' lower than that specified in the model object for the sake of efficiency. If 
+#' `boots` is not specified, then we will use the same bootstrap count in the 
+#' permutation test WQS runs as that specified in the model argument.
 #'
-#' The arguments `b1_pos` and `rs` should be consistent with the inputs chosen in the 
-#' model object. The seed should ideally be consistent with the seed set in the 
-#' model object, though this is not required.
+#' The arguments `b1_pos` and `rs` should be consistent with the inputs chosen 
+#' in the model object. The seed should ideally be consistent with the seed set 
+#' in the model object, though this is not required.
 #' 
 #' For full details on how to use this function, please reference the vignette.
 #'
 #' @param model A \code{gwqs} object as generated from the \code{gWQS} package.  
 #' @param niter Number of permutation test iterations. 
-#' @param boots Number of bootstrap samples for each permutation test \code{wqs} run.  
-#' If `boots` is not specified, then we will use the same bootstrap count in the 
-#' permutation test WQS runs as that specified in the main WQS run.
-#' @param b1_pos A logical value that indicates whether beta values should be positive 
-#' or negative.
-#' @param rs A logical value indicating whether random subset implementation should be 
-#' performed. 
-#' @param plan_strategy Evaluation strategy for the plan function. You can choose among 
-#' "sequential", "transparent", "multisession", "multicore", "multiprocess", "cluster" 
-#' and "remote." See gWQS documentation for full details. 
+#' @param boots Number of bootstrap samples for each permutation test \code{wqs} 
+#' run. If `boots` is not specified, then we will use the same bootstrap count 
+#' in the permutation test WQS runs as that specified in the main WQS run.
+#' @param b1_pos A logical value that indicates whether beta values should be 
+#' positive or negative.
+#' @param rs A logical value indicating whether random subset implementation 
+#' should be performed. 
+#' @param plan_strategy Evaluation strategy for the plan function. You can choose 
+#' among "sequential", "transparent", "multisession", "multicore", 
+#' "multiprocess", "cluster" and "remote." See gWQS documentation for full 
+#' details. 
 #' @param seed (optional) Random seed for the permutation test WQS reference run. 
 #' This should be the same random seed as used for the main WQS run. 
 #'
 #' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains 
 #' three sublists: 
 #' 
-#' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the proportion of 
-#' permuted WQS coefficient values greater than the reference value, (2) `testbeta1`: 
-#' reference WQS coefficient beta1 value, (3) `betas`: Vector of beta values from 
-#' each permutation test run.}
+#' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the 
+#' proportion of permuted WQS coefficient values greater than the reference 
+#' value, (2) `testbeta1`: reference WQS coefficient beta1 value, (3) `betas`: 
+#' Vector of beta values from each permutation test run.}
 #' \item{gwqs_main}{Main gWQS object (same as model input)}
-#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number of 
-#' bootstraps as main gWQS object)}
+#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number 
+#' of bootstraps as main gWQS object)}
 #' @import gWQS ggplot2 viridis cowplot
 #' @export wqs_perm
 #'
@@ -65,22 +68,24 @@
 #' # This example has a lower niter in order to serve as a shorter test run. 
 #' 
 #' @references
-#' Day, D., Collett, B., Barrett, E., ... & Sathyanarayana, S. (2021). Phthalate mixtures 
-#' in pregnancy, autistic traits, and adverse childhood behavioral outcomes. Environment 
-#' International, 147, 106330.
+#' Day, D., Collett, B., Barrett, E., ... & Sathyanarayana, S. (2021). Phthalate 
+#' mixtures in pregnancy, autistic traits, and adverse childhood behavioral 
+#' outcomes. Environment International, 147, 106330.
 #'
-#' Loftus, C. T., Bush, N. R., Day, D., ... & LeWinn, K. Z. (2021). Exposure to prenatal 
-#' phthalate mixtures and neurodevelopment in the Conditions Affecting Neurocognitive 
-#' Development and Learning in Early childhood (CANDLE) study. Environment international, 
-#' 150, 106409.
+#' Loftus, C. T., Bush, N. R., Day, D., ... & LeWinn, K. Z. (2021). Exposure to 
+#' prenatal phthalate mixtures and neurodevelopment in the Conditions Affecting 
+#' Neurocognitive Development and Learning in Early childhood (CANDLE) study. 
+#' Environment international, 150, 106409.
 #' 
-wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr = TRUE, rs = FALSE, 
-                     plan_strategy = "multicore", seed = NULL) {
+wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, 
+                     b1_constr = TRUE, rs = FALSE, plan_strategy = "multicore", 
+                     seed = NULL) {
   
   if (class(model) == "gwqs") {
-    if (!model$family$family %in% c("gaussian", "binomial") | !model$family$link %in% c("identity", "logit")){
-      stop("The permutation test is currently only set up to accomodate the Gaussian or 
-           binomial families.")
+    if (!model$family$family %in% c("gaussian", "binomial") | 
+        !model$family$link %in% c("identity", "logit")){
+      stop("The permutation test is currently only set up to accomodate the 
+           Gaussian or binomial families.")
     }
   } else stop("'model' must be of class 'gwqs' (see gWQS package).")
   
@@ -89,10 +94,11 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
   
   if (!is.null(model$stratified) | grepl("wqs:", formchar[3], fixed = T))
   {
-    # TODO: We should be able to accomodate stratified weights though we haven't tested that yet,
-    # and I'm not sure it makes sense to have stratified weights without a WQS interaction term.
-    stop("This permutation test is not yet set up to accomodate stratified weights or 
-         WQS interaction terms.")
+    # TODO: We should be able to accomodate stratified weights though we haven't 
+    # tested that yet, and I'm not sure it makes sense to have stratified weights 
+    # without a WQS interaction term.
+    stop("This permutation test is not yet set up to accomodate stratified 
+         weights or WQS interaction terms.")
   }  
   
   cl = match.call()
@@ -122,8 +128,9 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     
     else{
       perm_ref_wqs <- gwqs(formula = formula(mm), data = Data, mix_name = mix_name, 
-                           q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
-                           b1_pos = b1_pos, b1_constr = b1_constr, seed = seed)
+                           q = nq, b = boots, rs = rs, validation = 0, 
+                           plan_strategy = plan_strategy, b1_pos = b1_pos, 
+                           b1_constr = b1_constr, seed = seed)
       
       ref_beta1 <- perm_ref_wqs$fit$coef[2]
     }
@@ -132,12 +139,14 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     if (length(mm$coef) > 2) {
       # This is the permutation test algorithm when there are multiple independent 
       # variables in the model
-      lm_form <- formula(paste0(formchar[2], formchar[1], gsub("wqs + ", "", formchar[3], fixed = T)))
+      lm_form <- formula(paste0(formchar[2], formchar[1], 
+                                gsub("wqs + ", "", formchar[3], fixed = T)))
       fit.partial <- lm(lm_form, data = Data)
       partial.yhat <- predict(fit.partial)
       partial.resid <- resid(fit.partial)
       reorgmat <- matrix(NA, dim(Data)[1], niter)
-      reorgmat <- apply(reorgmat, 2, function(x) partial.yhat + sample(partial.resid, replace = F))
+      reorgmat <- apply(reorgmat, 2, function(x) 
+        partial.yhat + sample(partial.resid, replace = F))
     } else {
       # This is the permutation test algorithm when there is only one independent 
       # variable in the model
@@ -160,10 +169,12 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
       
       gwqs1 <- tryCatch({
         suppressWarnings(gwqs(formula = form1, data = newDat, mix_name = mix_name, 
-                              q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
-                              b1_pos = b1_pos, b1_constr = b1_constr))
+                              q = nq, b = boots, rs = rs, validation = 0, 
+                              plan_strategy = plan_strategy, b1_pos = b1_pos, 
+                              b1_constr = b1_constr))
       }, error = function(e) NULL, 
-      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), 
+                                   message("WQS failed")))
       
       if (is.null(gwqs1))
         lm1 <- NULL else lm1 <- gwqs1$fit
@@ -191,7 +202,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     
     pval <- calculate_pval(betas, ref_beta1, b1_pos)
     
-    perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, call = cl)
+    perm_retlist <- list(pval = pval, testbeta1 = ref_beta1, betas = betas, 
+                         call = cl)
     
     model$b1_pos <- b1_pos
     perm_ref_wqs$b1_pos <- b1_pos
@@ -203,7 +215,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     Data <- model$data[model$vindex,]
     
     initialfit <- function(m) {
-      newform <- formula(paste0(m, "~", gsub("wqs + ", "", formchar[3], fixed = T)))
+      newform <- formula(paste0(m, "~", gsub("wqs + ", "", formchar[3], 
+                                             fixed = T)))
       fit.x1 <- lm(newform, data = Data)
       return(resid(fit.x1))
     }
@@ -212,20 +225,24 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
     Data[, model$mix_name] <- residmat
     
     lwqs1 <- tryCatch({
-      suppressWarnings(gwqs(formula = formula(mm), data = Data, mix_name = model$mix_name,
-                            q = nq, b = boots, rs = rs, validation = 0, plan_strategy = plan_strategy,
-                            b1_pos = b1_pos, family = model$family$family, seed = seed,
+      suppressWarnings(gwqs(formula = formula(mm), data = Data, 
+                            mix_name = model$mix_name, q = nq, b = boots, 
+                            rs = rs, validation = 0, 
+                            plan_strategy = plan_strategy, b1_pos = b1_pos, 
+                            family = model$family$family, seed = seed,
                             b1_constr = b1_constr))
     }, error = function(e) NULL, 
     warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
     
     fit1 <- lwqs1$fit
-    fit2 <- glm(formula(paste0(yname, formchar[1], gsub("wqs + ", "", formchar[3], fixed = T))), 
+    fit2 <- glm(formula(paste0(yname, formchar[1], gsub("wqs + ", "", 
+                                                        formchar[3], fixed = T))), 
                 data = Data, family = model$family$family)
     
     p.value.obs <- 1 - pchisq(abs(fit1$deviance - fit2$deviance), 1)
     
-    reorgmatlist <- lapply(1:niter, function(x) residmat[sample(1:nrow(residmat), replace = F), ])
+    reorgmatlist <- lapply(1:niter, function(x) residmat[sample(1:nrow(residmat), 
+                                                                replace = F), ])
     
     getperms <- function(x) {
       newDat <- Data
@@ -239,11 +256,16 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, b1_constr 
       
       
       gwqs1 <- tryCatch({
-        suppressWarnings(gwqs(formula = form1, data = newDat, mix_name = mix_name, q = model$q, b = boots,
-               rs = rs, validation = 0, plan_strategy = plan_strategy, b1_pos = b1_pos, family = model$family$family,
-               b1_constr = b1_constr)
+        suppressWarnings(gwqs(formula = form1, data = newDat, 
+                              mix_name = mix_name, q = model$q, b = boots, 
+                              rs = rs, validation = 0, 
+                              plan_strategy = plan_strategy, 
+                              b1_pos = b1_pos, family = model$family$family,
+                              b1_constr = b1_constr)
           )}, error = function(e) NULL, 
-        warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+        warning = function(e) ifelse(rs == TRUE, 
+                                     message("WQSRS failed"), 
+                                     message("WQS failed")))
       
       
       if (is.null(gwqs1))
@@ -329,8 +351,8 @@ summary.wqs_perm <- function(x, ...){
 #' of the full plot.
 #' @param AltMixName Defaults to NULL. If not NULL, these are alternative names 
 #' for the mixture components to be displayed on the heatmap y axis.
-#' @param AltOutcomeName Defaults to NULL. If not NULL, this is an alternative name 
-#' for the outcome to be displayed on the heatmap x axis.
+#' @param AltOutcomeName Defaults to NULL. If not NULL, this is an alternative 
+#' name for the outcome to be displayed on the heatmap x axis.
 #' @param ViridisPalette  Color palette to be used for the viridisLite 
 #' package-based coloring of the heatmap, with possible values from 'A' to 'E'. 
 #' Defaults to 'D'.
@@ -340,24 +362,27 @@ summary.wqs_perm <- function(x, ...){
 #' @param LegendTextSize Text text size for the legend text. Defaults to 14.
 #' @param PvalLabelSize The geom_text size for the permutation test p-value 
 #' label. Defaults to 5.
-#' @param HeatMapTextSize The geom_text size for the mixture weight heatmap labels. 
-#' Defaults to 5.
+#' @param HeatMapTextSize The geom_text size for the mixture weight heatmap 
+#' labels. Defaults to 5.
 #'
 #' @return Returns a list with 4 objects. 
 #' 
 #' \item{FullPlot}{Two plots stacked vertically: (1) Forest plot of the beta WQS 
-#' coefficient with the naive confidence intervals as well as the permutation test p-value
-#' (2) A heatmap of the WQS weights for each mixture component}
+#' coefficient with the naive confidence intervals as well as the permutation 
+#' test p-value (2) A heatmap of the WQS weights for each mixture component}
 #' \item{CoefPlot}{Forest plot of the beta WQS 
-#' coefficient with the naive confidence intervals as well as the permutation test p-value}
+#' coefficient with the naive confidence intervals as well as the permutation 
+#' test p-value}
 #' \item{WtPlot}{A heatmap of the WQS weights for each mixture component}
 #' \item{WtLegend}{}
 #' @export
 #'
-plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixName = NULL,
-                          AltOutcomeName = NULL, ViridisPalette = "D", StripTextSize = 14,
-                          AxisTextSize.Y = 12, AxisTextSize.X = 12, LegendTextSize = 14,
-                          PvalLabelSize = 5, HeatMapTextSize = 5) {
+plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, 
+                          AltMixName = NULL,AltOutcomeName = NULL, 
+                          ViridisPalette = "D", StripTextSize = 14,
+                          AxisTextSize.Y = 12, AxisTextSize.X = 12, 
+                          LegendTextSize = 14, PvalLabelSize = 5, 
+                          HeatMapTextSize = 5) {
   
   wqs_fam <- wqspermresults$family
 
@@ -403,7 +428,8 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
                     size = 1,
                     width = 0.75) +
       geom_hline(yintercept = 0) +
-      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
+      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), 
+                size = PvalLabelSize) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
         strip.text = element_text(size = StripTextSize),
@@ -419,7 +445,8 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
       geom_errorbar(aes(ymin = LCI, ymax = UCI),
                     size = 1,
                     width = 0.75) +
-      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), size = PvalLabelSize) +
+      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), 
+                size = PvalLabelSize) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
         strip.text = element_text(size = StripTextSize),
@@ -436,7 +463,8 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
   WQSwts$Outcome <- WQSResults$Outcome
   WQSwts$Direction <- WQSResults$Direction
   WQSwts$mix_name <-
-    factor(as.character(WQSwts$mix_name), levels = wqspermresults$gwqs_main$mix_name)
+    factor(as.character(WQSwts$mix_name), 
+           levels = wqspermresults$gwqs_main$mix_name)
   if (!is.null(AltMixName))
     levels(WQSwts$mix_name) <- AltMixName
   WQSwts$mix_name <-
@@ -488,9 +516,10 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
       )
     l1 <- cowplot::get_legend(legplot)
     
-    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
-      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
-                                                                   round(Wt, 2)), size = HeatMapTextSize) +
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + 
+      theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + 
+      geom_text(aes(label =round(Wt, 2)), size = HeatMapTextSize) +
       scale_fill_manual(values = Virclr) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
@@ -505,9 +534,10 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, AltMixN
         legend.text = element_text(size = LegendTextSize)
       )
   } else {
-    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + theme_classic() +
-      geom_tile(aes(fill = Weight), alpha = 0.7) + geom_text(aes(label =
-                                                                   round(Weight, 2)), size = HeatMapTextSize) +
+    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + 
+      theme_classic() +
+      geom_tile(aes(fill = Weight), alpha = 0.7) + 
+      geom_text(aes(label = round(Weight, 2)), size = HeatMapTextSize) +
       scale_fill_viridis_c(option = ViridisPalette) +
       facet_grid(FacetLabel ~ Direction) +
       theme(

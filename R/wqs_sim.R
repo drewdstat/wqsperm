@@ -27,8 +27,8 @@
 #' truewqsbeta will be sampled from a normal distribution. 
 #' @param seed Random seed.
 #' @param q Number of quantiles. 
-#' @param type Type of outcome (`gaussian` for continuous outcomes or `binomial` 
-#' for binary outcomes)
+#' @param type Outcome type (`gaussian` for continuous outcomes or `binomial` 
+#' for binary outcomes).
 #'
 #' @return \code{wqs_perm} returns a list of:
 #' \item{weights}{Simulated weights.}

@@ -4,10 +4,11 @@
 #' test (Day et al, 2022) to obtain an estimate for the p-value significance for 
 #' the WQS coefficient.  
 #' 
-#' `wqs_perm` uses a `gwqs` object (from the gWQS package) as an input. To use 
-#' `wqs_perm`, we first need to run an initial WQS regression while setting 
+#' To use `wqs_perm`, we first need to run an initial WQS regression while setting 
 #' `validation=0`. We will use this `gwqs` object as the model argument for the 
-#' `wqs_perm` function. 
+#' `wqs_perm` function. Note that permutation test can currently only take in `gwqs` 
+#' inputs where `family = "gaussian"` or `family = "binomial"`, and it is not
+#' currently equipped to handle stratified weights or WQS interaction terms.
 #' 
 #' The argument `boots` is the number of bootstraps for the WQS run in each 
 #' permutation test iteration. Note that we may elect a bootstrap count `boots` 
@@ -18,8 +19,6 @@
 #' The arguments `b1_pos` and `rs` should be consistent with the inputs chosen 
 #' in the model object. The seed should ideally be consistent with the seed set 
 #' in the model object, though this is not required.
-#' 
-#' For full details on how to use this function, please reference the vignette.
 #'
 #' @param model A \code{gwqs} object as generated from the \code{gWQS} package.  
 #' @param niter Number of permutation test iterations. 
@@ -40,13 +39,17 @@
 #' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains 
 #' three sublists: 
 #' 
-#' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the 
-#' proportion of permuted WQS coefficient values greater than the reference 
-#' value, (2) `testbeta1`: reference WQS coefficient beta1 value, (3) `betas`: 
-#' Vector of beta values from each permutation test run.}
-#' \item{gwqs_main}{Main gWQS object (same as model input)}
-#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if same number 
-#' of bootstraps as main gWQS object)}
+#' \item{perm_test}{List containing: (1) `pval`: permutation test p-value, (2) (linear 
+#' regression only) `testbeta1`: reference WQS coefficient 
+#' beta1 value, (3) (linear regression only) `betas`: Vector of beta values from each 
+#' permutation test run, (4) (logistic regression only) `pval_se`: standard error 
+#' for the p-value, (5) (logistic regression only) `testpval`: test reference 
+#' p-value, (6) (logistic regression only) `permpvals`: p-values from the null 
+#' models.}
+#' \item{gwqs_main}{Main gWQS object (same as model input).}
+#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
+#' `family = "binomial"` or if same number of bootstraps are used in permutation 
+#' test WQS runs as in the main run).}
 #' @import gWQS ggplot2 viridis cowplot
 #' @export wqs_perm
 #'
@@ -68,6 +71,12 @@
 #' # This example has a lower niter in order to serve as a shorter test run. 
 #' 
 #' @references
+#' 
+#' Day, D., Sathyanarayana, S., LeWinn, K., Karr, C., Mason, A., Szpiro, A. (2022). 
+#' A Permutation Test-Based Approach to Strengthening Inference on the Effects of 
+#' Environmental Mixtures: Comparison Between Single Index Analytic Methods. 
+#' Under Review. 
+#' 
 #' Day, D., Collett, B., Barrett, E., ... & Sathyanarayana, S. (2021). Phthalate 
 #' mixtures in pregnancy, autistic traits, and adverse childhood behavioral 
 #' outcomes. Environment International, 147, 106330.
@@ -91,7 +100,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   
   mm <- model$fit
   formchar <- as.character(formula(mm))
-  
+
   if (!is.null(model$stratified) | grepl("wqs:", formchar[3], fixed = T))
   {
     # TODO: We should be able to accomodate stratified weights though we haven't 
@@ -159,8 +168,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
       newDat <- Data
       newDat[, yname] <- x
       names(newDat) <- c(names(Data))
-      formchar <- as.character(formula(mm))
-      
+
       if (length(mm$coef) > 2) {
         form1 <- formula(paste0(formchar[2], formchar[1], formchar[3]))
       } else {
@@ -217,6 +225,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     initialfit <- function(m) {
       newform <- formula(paste0(m, "~", gsub("wqs + ", "", formchar[3], 
                                              fixed = T)))
+      
       fit.x1 <- lm(newform, data = Data)
       return(resid(fit.x1))
     }
@@ -343,11 +352,11 @@ summary.wqs_perm <- function(x, ...){
 #' Generates plots to help visualize and summarize WQS permutation test results. 
 #'
 #' @param wqspermresults An object of class `wqs_perm`.
-#' @param FixedPalette If true, the heatmap color key for the mixture weights has 
+#' @param FixedPalette If TRUE, the heatmap color key for the mixture weights has 
 #' ategorical cutoffs with the following categories: <0.1, 0.1 - <0.2, 0.2 - <0.3, 
 #' and >= 0.3. If false, the heatmap color key is continuous and dependent on the 
 #' weight values.
-#' @param InclKey If true, a horizontal heatmap legend is included at the bottom 
+#' @param InclKey If TRUE, a horizontal heatmap legend is included at the bottom 
 #' of the full plot.
 #' @param AltMixName Defaults to NULL. If not NULL, these are alternative names 
 #' for the mixture components to be displayed on the heatmap y axis.
@@ -369,16 +378,16 @@ summary.wqs_perm <- function(x, ...){
 #' 
 #' \item{FullPlot}{Two plots stacked vertically: (1) Forest plot of the beta WQS 
 #' coefficient with the naive confidence intervals as well as the permutation 
-#' test p-value (2) A heatmap of the WQS weights for each mixture component}
+#' test p-value (2) A heatmap of the WQS weights for each mixture component.}
 #' \item{CoefPlot}{Forest plot of the beta WQS 
 #' coefficient with the naive confidence intervals as well as the permutation 
-#' test p-value}
-#' \item{WtPlot}{A heatmap of the WQS weights for each mixture component}
-#' \item{WtLegend}{}
+#' test p-value.}
+#' \item{WtPlot}{A heatmap of the WQS weights for each mixture component.}
+#' \item{WtLegend}{A legend for the weights in the WtPlot heatmap.}
 #' @export
 #'
-plot.wqs_perm <- function(wqspermresults, FixedPalette = F, InclKey = F, 
-                          AltMixName = NULL,AltOutcomeName = NULL, 
+plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE, 
+                          AltMixName = NULL, AltOutcomeName = NULL, 
                           ViridisPalette = "D", StripTextSize = 14,
                           AxisTextSize.Y = 12, AxisTextSize.X = 12, 
                           LegendTextSize = 14, PvalLabelSize = 5, 

@@ -22,22 +22,30 @@
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose 
 #' among "sequential", "transparent", "multisession", "multicore", "multiprocess", 
 #' "cluster" and "remote." See gWQS documentation for full details. 
-#' @param ... Other parameters to put into the gwqs function call
+#' @param ... Other parameters to put into the gwqs function call.
 #' @param b1_constr Logical value that determines whether to apply positive or 
 #' negative constraints in the optimization function for the weight optimization.
-#' @param family `gaussian` for linear regression, `binomial` for logistic 
-#' regression
+#' @param family A character value: `gaussian` for linear regression, `binomial` 
+#' for logistic regression.
+#' @param stop_if_insig if TRUE, the function will not proceed with the 
+#' permutation test if the main WQS run produces insignificant p-value.
+#' @param stop_thresh numeric p-value threshold required in order to proceed 
+#' with the permutation test, if `stop_if_insig = TRUE`.
 #'
 #' @return \code{wqs_full_perm} returns an object of class `wqs_perm`, which 
 #' contains three sublists: 
 #' 
-#' \item{perm_test}{Contains three objects: (1) `pval`: p-value for the 
-#' proportion of permuted WQS coefficient values greater than the reference 
-#' value, (2) `testbeta1`: reference WQS coefficient beta1 value, (3) `betas`: 
-#' Vector of beta values from each permutation test run.}
-#' \item{gwqs_main}{main gWQS object (same as model input)}
-#' \item{gwqs_perm}{permutation test reference gWQS object (NULL if same number 
-#' of bootstraps as main gWQS object)}
+#' \item{perm_test}{List containing: (1) `pval`: permutation test p-value, (2) (linear 
+#' regression only) `testbeta1`: reference WQS coefficient beta1 value, (3) 
+#' (linear regression only) `betas`: Vector of beta values from each 
+#' permutation test run, (4) (logistic regression only) `pval_se`: standard error 
+#' for the p-value, (5) (logistic regression only) `testpval`: test reference 
+#' p-value, (6) (logistic regression only) `permpvals`: p-values from the null 
+#' models.}
+#' \item{gwqs_main}{Main gWQS object (same as model input).}
+#' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
+#' `family = "binomial"` or if same number of bootstraps are used in permutation 
+#' test WQS runs as in the main run).}
 #' @import gWQS
 #' @export wqs_full_perm
 #'
@@ -46,7 +54,7 @@
 #'                                 mix_name = PCBs, q = 10, b_main = 10, 
 #'                                 b_perm = 5, b1_pos = T, niter = 10,
 #'                                 seed = 16, plan_strategy = "multicore", 
-#'                                 returnbetas = TRUE)
+#'                                 stop_if_insig = FALSE)
 #' 
 #'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 
 #'  are the recommended parameter values. This example has a lower b_main, 
@@ -55,7 +63,8 @@
 wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000, 
                           b_perm = 200, b1_pos = TRUE, b1_constr = TRUE, 
                           rs = FALSE, niter = 200, seed = NULL, 
-                          family = "gaussian", plan_strategy = "multicore", ...){
+                          family = "gaussian", plan_strategy = "multicore",
+                          stop_if_insig = FALSE, stop_thresh = 0.05, ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, 
@@ -63,6 +72,14 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                               b1_constr = b1_constr, rs = rs, seed = seed, 
                               validation = 0, family = family, 
                               plan_strategy = plan_strategy, ...) 
+  
+  naive_p <- summary(gwqs_res_main)$coefficients["wqs", 4]
+
+  if (naive_p > stop_thresh){
+    stop(sprintf("The main WQS run did not give a significant result (p = %s)", 
+                 naive_p))
+  }
+
   
   # run permutation test (using wqs_perm function) 
   results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, 

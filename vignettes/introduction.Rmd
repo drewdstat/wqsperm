@@ -277,7 +277,7 @@ plot(perm_test_res1)$FullPlot
 ```
 
 
-## Example 2
+## Example 2 (using `wqs_perm`)
 
 This is an example where the WQS permutation test goes against a (false positive) 
 significant naive result. 
@@ -360,7 +360,7 @@ plot(perm_test_res)$FullPlot
 
 
 
-## Example 4 (using `wqsfullperm` on logistic regression example)
+## Example 4 (using `wqsfullperm` on binary outcome example)
 
 This is an example we apply to the logistic regression version of the WQS 
 permutation test. 

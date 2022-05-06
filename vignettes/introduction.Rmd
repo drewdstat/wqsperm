@@ -1,7 +1,7 @@
 ---
 title: "How to use the wqsperm package"
 author: "Drew Day, James Peng"
-date: "4/18/2022"
+date: "5/5/2022"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
@@ -75,7 +75,7 @@ values to get a new outcome variable $y*$.
 observed outcome variables, obtaining an estimate for the WQS coefficient $\beta_1^*$. 
 
 5. Repeat steps 3 and 4. 
-  
+
 6. Calculate the p-value by taking the proportion of $\beta_1^*$ values greater than 
 the WQS coefficient estimate obtained in Step 1. 
 
@@ -154,13 +154,13 @@ sublists:
 * **perm_test**
   * **pval**: permutation test p-value
   * *Linear regression only*
-    * **testbeta**: reference WQS coefficient $\beta_1$ value 
-    * **betas**: a vector of $\beta_1$ values from each iteration of the permutation 
-    test
+  * **testbeta**: reference WQS coefficient $\beta_1$ value 
+  * **betas**: a vector of $\beta_1$ values from each iteration of the permutation 
+test
   * *Logistic regression only*
-    * **pval_se**: standard error for the p-value 
-    * **testpval**: test reference p-value
-    * **permpvals**: p-values from null models 
+  * **testpval**: test reference p-value
+  * **permpvals**: p-values from null models 
+  * **pval_se**: standard error for the p-value ß
 * **gwqs_main**: main gWQS object (same as `model` input)
 * **gwqs_perm**: permutation test reference gWQS object (NULL if model 
 `family = "binomial"` or if same number of bootstraps are used in permutation 
@@ -190,8 +190,9 @@ Finally, you should indicate the number of desired permutation test runs `niter`
 
 Since the WQS permutation test can be computationally intensive, you can specify 
 `stop_if_insig = TRUE` if you do not wish for the permutation test to proceed 
-if the naive main WQS run produces an insignificant result (see 
-*Recommendations for Use* section below).
+if the naive main WQS run produces an insignificant result (if the p-value 
+is below the `stop_thresh` argument, defaulted at 0.05). 
+See *Recommendations for Use* section below.
 
 The `wqs_full_perm` returns an object of class `wqs_perm`, with outputs described 
 above. 
@@ -214,10 +215,10 @@ result.
 
 We first produce a simulated dataset with the following parameters: 
 
-* WQS coefficient $\beta_1$: 0.3 
-* Mixture weights: 0.15 for first 5 components, 0.05 for remaining  5 components 
+* WQS coefficient $\beta_1$: 0.2 
+* Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
 
-```{r, warning = F, message = F}
+```{r, warning = F, message = F, cache = T}
 library(gWQS)
 library(wqsperm)
 
@@ -227,38 +228,39 @@ sim_res1 <- wqs_sim(nmix = 10,
                     nobs = 1000,
                     ntruewts = 10, 
                     ntruecovrt = 5, 
-                    truewqsbeta = 0.3, 
+                    truewqsbeta = 0.2, 
                     truebeta0 = 2, 
                     truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
                                 0.05, 0.05, 0.05, 0.05, 0.05), 
-                    q = 10)
+                    q = 10, 
+                    seed = 16)
 
 sim_data1 <- sim_res1$Data
 ```
 
 Now we run WQS regression on the simulated data.  
 
-```{r, warning = F}
+```{r, warning = F, cache = T}
 # mixture names
 mix_names1 <- colnames(sim_data1)[2:11]
 
 # create reference wqs object
 wqs_main1 <- gwqs(y ~ wqs, mix_name = mix_names1, data = sim_data1, q = 10, validation = 0,
-                b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
-                seed = 16)
+                  b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
+                  seed = 16)
 ```
 
 Finally, we can perform a permutation test on the WQS object. 
 
-```{r}
+```{r, cache = T}
 # run permutation test
-perm_test_res1 <- wqs_perm(wqs_main1, niter = 10, boots = 5, b1_pos = T, seed = 16)
+perm_test_res1 <- wqs_perm(wqs_main1, niter = 50, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 
 WQS coefficient (p-value < 0.001).
 
-```{r}
+```{r, cache = T}
 main_sum1 <- summary(perm_test_res1$gwqs_main)
 
 main_sum1$coefficients
@@ -266,13 +268,13 @@ main_sum1$coefficients
 
 The permutation test confirms the significance of this result. 
 
-```{r}
+```{r, cache = T}
 perm_test_res1$perm_test$pval
 ```
 
 Here are the summary plots: 
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 plot(perm_test_res1)$FullPlot
 ```
 
@@ -285,9 +287,9 @@ significant naive result.
 We produce a simulated dataset with the following parameters: 
 
 * WQS coefficient $\beta_1$: 0
-* Mixture weights: 0.15 for first 5 components, 0.05 for remaining  5 components 
+* Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
 
-```{r, warning = F, message = F}
+```{r, warning = F, message = F, cache = T}
 sim_res2 <- wqs_sim(nmix = 10,
                     ncovrt = 10,
                     nobs = 1000,
@@ -297,44 +299,45 @@ sim_res2 <- wqs_sim(nmix = 10,
                     truebeta0 = 0.1, 
                     truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
                                 0.05, 0.05, 0.05, 0.05, 0.05), 
-                    q = 10)
+                    q = 10, 
+                    seed = 16)
 
 sim_data2 <- sim_res2$Data
 ```
 
 Now we run WQS regression as well as the permutation test on the simulated data.  
 
-```{r}
+```{r, cache = T}
 # mixture names
 mix_names2 <- colnames(sim_data2)[2:11]
 
 # create reference wqs object
 wqs_main2 <- gwqs(y ~ wqs, mix_name = mix_names2, data = sim_data2, q = 10, validation = 0,
-                b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
-                seed = 16)
+                  b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
+                  seed = 16)
 
 # run permutation test
-perm_test_res2 <- wqs_perm(wqs_main2, niter = 10, boots = 5, b1_pos = T, seed = 16)
+perm_test_res2 <- wqs_perm(wqs_main2, niter = 50, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 
-WQS coefficient (p-value = 0.049).
+WQS coefficient (p-value = 0.033).
 
-```{r}
+```{r, cache = T}
 main_sum2 <- summary(perm_test_res2$gwqs_main)
 
 main_sum2$coefficients
 ```
 
-The permutation test, however, repudiates the signficance of these plots (p = 0.43).  
+The permutation test, however, repudiates the signficance of these plots (p = 0.38).  
 
-```{r}
+```{r, cache = T}
 perm_test_res2$perm_test$pval
 ```
 
 Here are the summary plots: 
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 plot(perm_test_res2)$FullPlot
 ```
 
@@ -343,7 +346,7 @@ plot(perm_test_res2)$FullPlot
 Using the same data as in Example 1, we run the WQS regression with permutation
 test using the full wrapper `wqs_full_perm` call.
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 perm_test_res <- wqs_full_perm(y ~ wqs,
                                data = sim_data1,
                                mix_name = mix_names1,
@@ -351,7 +354,7 @@ perm_test_res <- wqs_full_perm(y ~ wqs,
                                b_main = 10,
                                b_perm = 5,
                                b1_pos = T,
-                               niter = 10,
+                               niter = 50,
                                seed = 16,
                                plan_strategy = "multicore")
 
@@ -370,7 +373,7 @@ We produce a simulated dataset with the following parameters:
 * WQS coefficient $\beta_1$: 0.4
 * Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 sim_res3 <- wqs_sim(nmix = 10,
                     ncovrt = 10,
                     nobs = 1000,
@@ -381,7 +384,8 @@ sim_res3 <- wqs_sim(nmix = 10,
                     truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
                                 0.05, 0.05, 0.05, 0.05, 0.05), 
                     q = 10, 
-                    type = "binomial")
+                    type = "binomial",
+                    seed = 16)
 
 sim_data3 <- sim_res3$Data
 
@@ -392,7 +396,7 @@ perm_test_res <- wqs_full_perm(y ~ wqs,
                                b_main = 20,
                                b_perm = 10,
                                b1_pos = T,
-                               niter = 20,
+                               niter = 50,
                                seed = 16,
                                plan_strategy = "multicore",
                                family = "binomial")

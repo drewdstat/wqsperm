@@ -94,7 +94,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     if (!model$family$family %in% c("gaussian", "binomial") | 
         !model$family$link %in% c("identity", "logit")){
       stop("The permutation test is currently only set up to accomodate the 
-           Gaussian or binomial families.")
+           gaussian(link = 'identity') or binomial(link = 'logit') families.")
     }
   } else stop("'model' must be of class 'gwqs' (see gWQS package).")
   
@@ -300,9 +300,9 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     p0.se <- sqrt(p0 * (1 - p0) / niter)
     
     perm_retlist <- list(pval = p0, 
-                         pval_se = p0.se,
                          testpval = p.value.obs,
-                         permpvals = permstats)
+                         permpvals = permstats,
+                         pval_se = p0.se)
     
     model$b1_pos <- b1_pos
 

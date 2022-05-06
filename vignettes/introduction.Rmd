@@ -1,7 +1,7 @@
 ---
 title: "How to use the wqsperm package"
 author: "Drew Day, James Peng"
-date: "2/18/2022"
+date: "5/5/2022"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 # Introduction 
 
 Weighted quantile sum (WQS) regression is a statistical technique to evaluate the 
-effect of complex exposure mixtures on an outcome (Carrico et al. 2015). It is a 
+effect of complex exposure mixtures on an outcome (Carrico, 2015). It is a 
 single-index method which estimates a combined mixture sum effect as well as weights 
 determining each individual mixture component's contributions to the sum effect. 
 However, the model features a statistical power and Type I error (i.e., false positive) 
@@ -30,22 +30,22 @@ high false positive rate since coefficient p-values are calculated for a weighte
 mixture independent variable calculated using weights that have already been optimized 
 to find a large effect. 
 
-We recently proposed an alternative method based on a permutation test that should 
+We recently proposed alternative methods based on a permutation test that should 
 reliably allow for both high power and low false positive rate when utilizing WQS.
 The permutation test is a method of obtaining a p-value by simulating the null 
 distribution through permutations of the data. The permutation test algorithm 
-is described more in detail in (reference Drew's paper).
+is described more in detail in (Day, 2022) and (Day, 2022).
 
 ## About WQS 
 
 The goal of WQS regression is to determine whether an exposure mixture is associated 
 with an outcome in a prespecified direction. It fits the following model: 
 
-$Y = \beta_0 + \beta_1(\sum_{i=1}^{c} w_i {X_q}_i) + z'\gamma$   
+$Y = \beta_0 + \beta_1(\sum_{i=1}^{m} w_i {X_q}_i) + Z'\gamma$   
 
 Where $Y$ is the outcome variable, $\beta_0$ is the intercept, $\beta_1$ is the 
 coefficient for the weighted quantile sum, $\sum_{i=1}^{c} w_i {X_q}_i$ is the 
-weighted index for the setof quantiled mixture exposures, $z$ is the set of 
+weighted index for the set of quantiled mixture exposures, $Z$ is the set of 
 covariates, and $\gamma$ is the regression coefficients for the covariates. 
 
 A full description of the WQS methodology is described in (Carrico, 2015). 
@@ -56,16 +56,20 @@ The WQS regression comprises of two steps, for which we typically split the data
 into a training and validation set. Doing this reduces statistical power since 
 we are training our model on only part of the data. On the other hand, if we skip this 
 training/test split, we can get a skewed representation of uncertainty for the WQS 
-coefficient. The following permutation method gives us a p-value for the uncertainty while also
-allowing us to use the full dataset for training and validation. It works as follows:
+coefficient. A permutation test method gives us a p-value for the 
+uncertainty while also allowing us to use the full dataset for training and 
+validation. 
 
-1. Run WQS regression without splitting the data, obtaining a WQS coefficient estimate. 
+### Continuous outcome algorithm (linear regression)
+
+1. Run WQS regression without splitting the data, obtaining a WQS coefficient 
+estimate. 
 
 2. Regress the outcome on all covariates but not the WQS variable. Then obtain the 
 predicted outcome values and their residuals from this regression. 
 
-3. Randomly permute the residual values and add them to the predicted outcome values
-to get a new outcome variable $y*$. 
+3. Randomly permute the residual values and add them to the predicted outcome 
+values to get a new outcome variable $y*$. 
 
 4. Run a WQS regression without splitting the data in which $y*$ replaces the vector of 
 observed outcome variables, obtaining an estimate for the WQS coefficient $\beta_1^*$. 
@@ -75,6 +79,34 @@ observed outcome variables, obtaining an estimate for the WQS coefficient $\beta
 6. Calculate the p-value by taking the proportion of $\beta_1^*$ values greater than 
 the WQS coefficient estimate obtained in Step 1. 
 
+### Binomial outcome algorithm (logistic regression)
+
+1. 	Regress each of the $m$ mixture components on all covariates $Z$ and obtain a $n$
+observations x $m$ matrix with columns being the residuals from each of the $m$ 
+models ($R_{m|Z}$).
+
+2. 	Obtain the initial fit ($fit1$) by running a “non-split” logistic WQS regression 
+in which the binary outcome variable $Y$ is regressed on the WQS vector and the 
+covariates, and the mixture matrix used to calculate the WQS vector is the 
+matrix of residuals from Step 1, $R_{m|Z}$. 
+
+3. 	Obtain the reduced fit ($fit2$) by running a logistic regression regressing $Y$
+on $Z$. 
+
+4. Calculate the test p-value ($p_t$) as $1-pchisq(d(fit1)-d(fit2),1)$ where d 
+is the deviance for a given model and $pchisq(x,1)$ is the probability density 
+function of the chi-square distribution in which the input $x$ is the difference 
+between the deviances of $fit1$ and $fit2$ and there is 1 degree of freedom. 
+
+5. Permute the rows of the $R_{m|Z}$ residual matrix from Step 1 and repeat 
+Step 2 to get a series of null fit1 models ($fit1^*$) for K iterations. 
+Obtain a distribution of permuted p-values ($p^*$) using the following formula: 
+$p^*=1-pchisq(fit1^*)-d(fit2),1$).
+
+6. 	Obtain the number of permuted $p^*$ less than or equal to the test $p_t$ from 
+Step 4 and divide that by the number of iterations K to calculate the permutation
+test p-value.
+
 # How to use the `wqsperm` package 
 
 The `wqsperm` package builds from the `gWQS` package.
@@ -83,45 +115,60 @@ The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_per
 
 ## `wqs_perm`
 
-`wqs_perm` uses a `gwqs` object (from the `gWQS` package) as an input. To use `wqs_perm`, 
-we first need to run an initial *WQS regression* while setting `validation=0`.  
+### Arguments 
+
+`wqs_perm` uses a `gwqs` object (from the `gWQS` package) as an input. To use 
+`wqs_perm`, we first need to run an initial *WQS regression* while setting 
+`validation=0`. Note that permutation test can currently only take in `gwqs` 
+inputs where `family = "gaussian"` or `family = "binomial"`, and it is not
+currently equipped to handle stratified weights or WQS interaction terms. 
 
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` 
 function and set the following additional parameters: 
 
 * `boots`: Number of bootstraps for the WQS run in each permutation test iteration. 
 Note that we may elect a bootstrap count `boots` lower than that specified in the 
-`model` object for the sake of efficiency. If we do, `wqs_perm` will generate a 
-permutation test reference WQS run with that number of bootstraps to determine 
-the reference $\beta_1$ value. If `boots` is not specified, then we will use the
-same bootstrap count in the permutation test WQS runs as that specified in the 
-main WQS run.
+`model` object for the sake of efficiency. If we do, `wqs_perm` will run the 
+permutation test WQS runs with the lower number of bootstraps. If `boots` is not 
+specified, then the function will use the same bootstrap count in the 
+permutation test WQS runs as that specified in the main WQS run.
 * `niter`: Number of permutation test iterations 
 * `b1_pos`: A logical value that indicates whether beta values should be positive 
 or negative
 * `rs`: A logical value indicating whether the random subset implementation for WQS 
-should be performed
-* `plan_strategy`: Evaluation strategy for the plan function. You can choose among 
-"sequential", "transparent", "multisession", "multicore", "multiprocess", "cluster" 
-and "remote." See gWQS package documentation for full details.  
+should be performed (Curtin, 2021)
+* `plan_strategy`: Evaluation strategy for the plan function ("sequential", 
+"transparent", "multisession", "multicore", "multiprocess", "cluster",
+or "remote"). See gWQS package documentation for full details.  
 * `seed`: Random seed for the permutation test WQS reference run
 
 The arguments `b1_pos` and `rs` should be consistent with the inputs chosen in 
 the `model` object. The `seed` should ideally be consistent with the seed set 
 in the `model` object, though this is not required. 
 
+### Outputs 
+
 The permutation test returns an object of class `wqs_perm`, which contains three 
 sublists: 
 
-* `perm_test`
-  * `pval`: p-value for the proportion of permuted WQS coefficient values greater 
-  than the reference value
-  * `testbeta`: reference WQS coefficient $\beta_1$ value 
-  * `betas`: a vector of $\beta_1$ values from each iteration of the permutation test
-* `gwqs_main`: main gWQS object (same as `model` input)
-* `gwqs_perm`: permutation test reference gWQS object (NULL if same number of bootstraps)
+* **perm_test**
+  * **pval**: permutation test p-value
+  * *Linear regression only*
+  * **testbeta**: reference WQS coefficient $\beta_1$ value 
+  * **betas**: a vector of $\beta_1$ values from each iteration of the permutation 
+test
+  * *Logistic regression only*
+  * **testpval**: test reference p-value
+  * **permpvals**: p-values from null models 
+  * **pval_se**: standard error for the p-value ß
+* **gwqs_main**: main gWQS object (same as `model` input)
+* **gwqs_perm**: permutation test reference gWQS object (NULL if model 
+`family = "binomial"` or if same number of bootstraps are used in permutation 
+test WQS runs as in the main run.)
 
-The `wqs_perm` class has a plotting method to help visualize and summarize WQS 
+### Plotting method
+
+The `wqs_perm` class has a `plot` method to help visualize and summarize WQS 
 permutation test results. Plots include (1) a forest plot of the beta WQS coefficient 
 with the naive confidence intervals as well as the permutation test p-value and
 (2) a heatmap of the WQS weights for each mixture component. 
@@ -132,45 +179,46 @@ The second function `wqs_full_perm` is a full wrapper which implements the initi
 gWQS run and permutation test in one function call. 
 
 To use `wqs_full_perm`, you must specify the same required arguments as needed in 
-the `gwqs` call. For the bootstrap count `b` argument, you must specify `b_main`, 
-the number of bootstraps for the *main WQS regression* run and `b_perm`, the number 
-of bootstraps for the *permutation test reference WQS regression* run. As with before, 
-it is acceptable/standard for `b_main` $>$ `b_perm` for the sake of efficiency. 
+the `gwqs` call. Note that permutation test can currently only handle 
+`family = "gaussian"` or `family = "binomial"`. 
+
+For the bootstrap count `b` argument, you must specify `b_main`,the number of 
+bootstraps for the *main WQS regression* run and `b_perm`, the number of 
+bootstraps for the *permutation test reference WQS regression* run. As with 
+before, you can choose to set `b_main` $>$ `b_perm` for the sake of efficiency. 
 Finally, you should indicate the number of desired permutation test runs `niter`.
 
-The `wqs_full_perm` returns an object of class `wqs_perm`, with outputs described above. 
+Since the WQS permutation test can be computationally intensive, you can specify 
+`stop_if_insig = TRUE` if you do not wish for the permutation test to proceed 
+if the naive main WQS run produces an insignificant result (if the p-value 
+is below the `stop_thresh` argument, defaulted at 0.05). 
+See *Recommendations for Use* section below.
 
-## Recommendations for use 
+The `wqs_full_perm` returns an object of class `wqs_perm`, with outputs described 
+above. 
+
+## Recommendations for Use 
 
 We recommend that users only apply the permutation test in cases where the naive 
 WQS test approaches significance or near-significance. If the naive test produces 
-a non-significant result, then there likely is no reason to run the permutation test, as it will produce a 
-result which is more conservative than the naive method. This is the strategy that we have applied 
-in our published papers (Loftus 2021 and Day 2021). 
-
-## Limitations 
-
-Note that there are limitations in the current version of the WQS permutation test 
-algorithm and package implementation:
-
-* **Linear regression only:** The permutation test algorithm can only have `gwqs` 
-inputs where `family = gaussian` and `link = identity`. A logistic regression version 
-for the algorithm is currently in the works. 
-* **Interaction terms or stratified weights:**  This permutation test is not yet 
-set up to accommodate stratified weights or WQS interaction terms.
+a non-significant result, then there likely is no reason to run the permutation 
+test, as it will produce a result which is more conservative than the naive 
+method. This is the strategy that we have applied in our published papers 
+(Loftus 2021 and Day 2021). 
 
 # Examples 
 
 ## Example 1 (using `wqs_perm`)
 
-This is an example where the WQS permutation test confirms a significant naive result.
+This is an example where the WQS permutation test confirms a significant naive 
+result.
 
 We first produce a simulated dataset with the following parameters: 
 
-* WQS coefficient $\beta_1$: 0.3 
-* Mixture weights: 0.15 for first 5 components, 0.05 for remaining  5 components 
+* WQS coefficient $\beta_1$: 0.2 
+* Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
 
-```{r, warning = F, message = F}
+```{r, warning = F, message = F, cache = T}
 library(gWQS)
 library(wqsperm)
 
@@ -180,40 +228,39 @@ sim_res1 <- wqs_sim(nmix = 10,
                     nobs = 1000,
                     ntruewts = 10, 
                     ntruecovrt = 5, 
-                    truewqsbeta = 0.3, 
+                    truewqsbeta = 0.2, 
                     truebeta0 = 2, 
                     truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
                                 0.05, 0.05, 0.05, 0.05, 0.05), 
-                    q = 10)
+                    q = 10, 
+                    seed = 16)
 
 sim_data1 <- sim_res1$Data
 ```
 
 Now we run WQS regression on the simulated data.  
 
-```{r}
+```{r, warning = F, cache = T}
 # mixture names
 mix_names1 <- colnames(sim_data1)[2:11]
 
-# TODO: Change bootstrap/iteration counts to be more realistic
-
 # create reference wqs object
 wqs_main1 <- gwqs(y ~ wqs, mix_name = mix_names1, data = sim_data1, q = 10, validation = 0,
-                b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
-                seed = 16)
+                  b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
+                  seed = 16)
 ```
 
 Finally, we can perform a permutation test on the WQS object. 
 
-```{r}
+```{r, cache = T}
 # run permutation test
-perm_test_res1 <- wqs_perm(wqs_main1, niter = 10, boots = 5, b1_pos = T, seed = 16)
+perm_test_res1 <- wqs_perm(wqs_main1, niter = 50, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 
 WQS coefficient (p-value < 0.001).
 
-```{r}
+```{r, cache = T}
 main_sum1 <- summary(perm_test_res1$gwqs_main)
 
 main_sum1$coefficients
@@ -221,18 +268,18 @@ main_sum1$coefficients
 
 The permutation test confirms the significance of this result. 
 
-```{r}
+```{r, cache = T}
 perm_test_res1$perm_test$pval
 ```
 
 Here are the summary plots: 
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 plot(perm_test_res1)$FullPlot
 ```
 
 
-## Example 2
+## Example 2 (using `wqs_perm`)
 
 This is an example where the WQS permutation test goes against a (false positive) 
 significant naive result. 
@@ -240,13 +287,9 @@ significant naive result.
 We produce a simulated dataset with the following parameters: 
 
 * WQS coefficient $\beta_1$: 0
-* Mixture weights: 0.15 for first 5 components, 0.05 for remaining  5 components 
+* Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
 
-```{r, warning = F, message = F}
-library(gWQS)
-library(wqsperm)
-
-# simulated dataset
+```{r, warning = F, message = F, cache = T}
 sim_res2 <- wqs_sim(nmix = 10,
                     ncovrt = 10,
                     nobs = 1000,
@@ -256,55 +299,54 @@ sim_res2 <- wqs_sim(nmix = 10,
                     truebeta0 = 0.1, 
                     truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
                                 0.05, 0.05, 0.05, 0.05, 0.05), 
-                    q = 10)
+                    q = 10, 
+                    seed = 16)
 
 sim_data2 <- sim_res2$Data
 ```
 
 Now we run WQS regression as well as the permutation test on the simulated data.  
 
-```{r}
+```{r, cache = T}
 # mixture names
 mix_names2 <- colnames(sim_data2)[2:11]
 
-# TODO: Change bootstrap/iteration counts to be more realistic
-
 # create reference wqs object
 wqs_main2 <- gwqs(y ~ wqs, mix_name = mix_names2, data = sim_data2, q = 10, validation = 0,
-                b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
-                seed = 16)
+                  b = 10, b1_pos = T, plan_strategy = "multicore", family = "gaussian", 
+                  seed = 16)
 
 # run permutation test
-perm_test_res2 <- wqs_perm(wqs_main2, niter = 10, boots = 5, b1_pos = T, seed = 16)
+perm_test_res2 <- wqs_perm(wqs_main2, niter = 50, boots = 5, b1_pos = T, seed = 16)
 ```
 
 Note that the naive WQS regression produces a significant result for the 
-WQS coefficient (p-value = 0.049).
+WQS coefficient (p-value = 0.033).
 
-```{r}
+```{r, cache = T}
 main_sum2 <- summary(perm_test_res2$gwqs_main)
 
 main_sum2$coefficients
 ```
 
-The permutation test, however, repudiates the signficance of these plots (p = 0.43).  
+The permutation test, however, repudiates the signficance of these plots (p = 0.38).  
 
-```{r}
+```{r, cache = T}
 perm_test_res2$perm_test$pval
 ```
 
 Here are the summary plots: 
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 plot(perm_test_res2)$FullPlot
 ```
 
-## Example 3 (using `wqs_full_perm`)
+## Example 3 (using `wqsfullperm`)
 
-Using the same data as in Example 1, we run the WQS regression with permutation test
-using the full wrapper `wqs_full_perm` call. 
+Using the same data as in Example 1, we run the WQS regression with permutation
+test using the full wrapper `wqs_full_perm` call.
 
-```{r, fig.height = 6}
+```{r, fig.height = 6, cache = T}
 perm_test_res <- wqs_full_perm(y ~ wqs,
                                data = sim_data1,
                                mix_name = mix_names1,
@@ -312,11 +354,54 @@ perm_test_res <- wqs_full_perm(y ~ wqs,
                                b_main = 10,
                                b_perm = 5,
                                b1_pos = T,
-                               niter = 10,
+                               niter = 50,
                                seed = 16,
-                               plan_strategy = "multicore",
-                               returnbetas = TRUE)
+                               plan_strategy = "multicore")
 
 plot(perm_test_res)$FullPlot
 ```
+
+
+
+## Example 4 (using `wqsfullperm` on binary outcome example)
+
+This is an example we apply to the logistic regression version of the WQS 
+permutation test. 
+
+We produce a simulated dataset with the following parameters: 
+
+* WQS coefficient $\beta_1$: 0.4
+* Mixture weights: 0.15 for first 5 components, 0.05 for remaining 5 components 
+
+```{r, fig.height = 6, cache = T}
+sim_res3 <- wqs_sim(nmix = 10,
+                    ncovrt = 10,
+                    nobs = 1000,
+                    ntruewts = 10, 
+                    ntruecovrt = 5, 
+                    truewqsbeta = 0.4, 
+                    truebeta0 = -2.5, 
+                    truewts = c(0.15, 0.15, 0.15, 0.15, 0.15,
+                                0.05, 0.05, 0.05, 0.05, 0.05), 
+                    q = 10, 
+                    type = "binomial",
+                    seed = 16)
+
+sim_data3 <- sim_res3$Data
+
+perm_test_res <- wqs_full_perm(y ~ wqs,
+                               data = sim_data3,
+                               mix_name = mix_names1,
+                               q = 10,
+                               b_main = 20,
+                               b_perm = 10,
+                               b1_pos = T,
+                               niter = 50,
+                               seed = 16,
+                               plan_strategy = "multicore",
+                               family = "binomial")
+
+plot(perm_test_res)$FullPlot
+```
+
 

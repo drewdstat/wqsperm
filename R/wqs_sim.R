@@ -1,48 +1,58 @@
 #' WQS simulated dataset generator
 #' 
-#' \code{wqs_sim} generates a simulated dataset of mixture components, covariates, and outcomes 
-#' based on an initial set of specifications. 
+#' \code{wqs_sim} generates a simulated dataset of mixture components, covariates, 
+#' and outcomes based on an initial set of specifications. 
 #'
 #' @param nmix Number of mixture components in simulated dataset.
 #' @param ncovrt Number of covariates in simulated dataset.
 #' @param nobs Number of observations in simulated dataset.
-#' @param ntruewts Number of mixture components that have a non-zero association with
-#' the outcome (i.e. are not noise). 
-#' @param ntruecovrt Number of covariates that have a non-zero association with the 
-#' outcome (i.e. are not noise).
+#' @param ntruewts Number of mixture components that have a non-zero association 
+#' with the outcome (i.e. are not noise). 
+#' @param ntruecovrt Number of covariates that have a non-zero association with 
+#' the outcome (i.e. are not noise).
 #' @param corrstruct Correlation matrix.
 #' @param eps Error term.
-#' @param truewqsbeta Simulated WQS beta_1 value. If NULL, then this value will be
-#' randomly sampled. 
+#' @param truewqsbeta Simulated WQS beta_1 value. If NULL, then this value will 
+#' be randomly sampled. 
 #' @param truebeta0 Simulated beta_0 value. If NULL, then this value will be
 #' randomly sampled. 
-#' @param truewts Simulated vector of mixture weights. If NULL, then this value will be
-#' randomly sampled. 
+#' @param truewts Simulated vector of mixture weights. If NULL, then this value 
+#' will be randomly sampled. 
 #' @param truegamma Simulated gamma vector. If NULL, then this value will be
 #' randomly sampled. 
-#' @param rnd_wqsbeta_dir Direction of randomly sampled truewqsbeta (if truewqsbeta = NULL). 
-#' You can choose between "positive", "negative", or NULL. If "positive" or "negative", 
-#' the truewqsbeta will be sampled from a half normal distribution in either of those respective
-#' directions. If NULL, then truewqsbeta will be sampled from a normal distribution. 
+#' @param rnd_wqsbeta_dir Direction of randomly sampled truewqsbeta (if 
+#' truewqsbeta = NULL). You can choose between "positive", "negative", or NULL. 
+#' If "positive" or "negative", the truewqsbeta will be sampled from a half 
+#' normal distribution in either of those respective directions. If NULL, then 
+#' truewqsbeta will be sampled from a normal distribution. 
 #' @param seed Random seed.
 #' @param q Number of quantiles. 
+#' @param type Outcome type (`gaussian` for continuous outcomes or `binomial` 
+#' for binary outcomes).
 #'
 #' @return \code{wqs_perm} returns a list of:
 #' \item{weights}{Simulated weights.}
 #' \item{coef}{Simulated beta coefficients.}
 #' \item{Data}{Simulated dataset.}
 #' \item{yhat}{simulated predicted y values from the data generating model.}
-#' \item{wqs}{Weighted quantile sum vector (quantile-transformed mixture components multiplied by weights).}
+#' \item{wqs}{Weighted quantile sum vector (quantile-transformed mixture 
+#' components multiplied by weights).}
 #' \item{modmat}{Model matrix.}
 #' \item{Xq}{Quantile-transformed mixture components.}
 #' 
 #' @import mvtnorm extraDistr
 #' @export wqs_sim
 #'
-wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovrt = 5, 
-                    corrstruct = 0, eps = 1, truewqsbeta = NULL, truebeta0 = NULL, 
-                    truewts = NULL, truegamma = NULL, rnd_wqsbeta_dir = "none", seed = 101,
-                    q = 10) {
+wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, 
+                    ntruecovrt = 5, corrstruct = 0, eps = 1, truewqsbeta = NULL, 
+                    truebeta0 = NULL, truewts = NULL, truegamma = NULL, 
+                    rnd_wqsbeta_dir = "none", seed = 101, q = 10, 
+                    type = "gaussian") {
+  
+  if (!type %in% c("gaussian", "binomial")){
+    stop("This simulation function can only continuous (type = 'gaussian') or 
+         binary (type = 'binomial') outcomes.")
+  }
   
   if (length(corrstruct) == 1) {
     Rho <- diag(nmix + ncovrt)
@@ -142,11 +152,22 @@ wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovr
     names(betas) <- c("beta0", "beta1")
   }
   
-  yhat <- modmat %*% betas
-  set.seed(seed)
-  epsilon <- rnorm(nobs, sd = eps)
-  y <- yhat + epsilon
-  Data <- data.frame(cbind(y, Xmat))
+  if (type == "binomial"){
+    etahat <- modmat %*% betas
+    probs <- 1 / (1 + exp(-etahat))
+    set.seed(seed)
+    y <- rbinom(nobs, size = 1, prob = probs)
+    Data <- data.frame(cbind(y, Xmat))
+    yhat <- NULL
+  }
+  else{
+    yhat <- modmat %*% betas
+    set.seed(seed)
+    epsilon <- rnorm(nobs, sd = eps)
+    y <- yhat + epsilon
+    Data <- data.frame(cbind(y, Xmat))    
+    etahat <- NULL 
+  }
   
   if (ncovrt > 0) {
     names(Data) <- c("y", paste0("T", 1:nmix), paste0("C", 1:ncovrt))
@@ -167,6 +188,7 @@ wqs_sim <- function(nmix = 10, ncovrt = 10, nobs = 500, ntruewts = 10, ntruecovr
       coef = betas,
       Data = Data,
       yhat = yhat,
+      etahat = etahat,
       wqs = wqs,
       modmat = modmat,
       Xq = Xmatquant

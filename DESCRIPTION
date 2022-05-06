@@ -2,7 +2,7 @@ Package: wqsperm
 Title: Permutation test for weighted quantile regression
 Version: 1.0.1
 Authors: Drew Day, James Peng, Adam Szpiro
-Description: Implements the permutation test for weighted quantile regression (Drew 2022). 
+Description: Implements the permutation test for weighted quantile regression (Day, 2022). 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

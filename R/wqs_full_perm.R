@@ -27,10 +27,10 @@
 #' negative constraints in the optimization function for the weight optimization.
 #' @param family A character value: `gaussian` for linear regression, `binomial` 
 #' for logistic regression.
-#' @param stop_if_insig if TRUE, the function will not proceed with the 
-#' permutation test if the main WQS run produces insignificant p-value.
+#' @param stop_if_nonsig if TRUE, the function will not proceed with the 
+#' permutation test if the main WQS run produces nonsignificant p-value.
 #' @param stop_thresh numeric p-value threshold required in order to proceed 
-#' with the permutation test, if `stop_if_insig = TRUE`.
+#' with the permutation test, if `stop_if_nonsig = TRUE`.
 #'
 #' @return \code{wqs_full_perm} returns an object of class `wqs_perm`, which 
 #' contains three sublists: 
@@ -54,7 +54,7 @@
 #'                                 mix_name = PCBs, q = 10, b_main = 10, 
 #'                                 b_perm = 5, b1_pos = T, niter = 10,
 #'                                 seed = 16, plan_strategy = "multicore", 
-#'                                 stop_if_insig = FALSE)
+#'                                 stop_if_nonsig = FALSE)
 #' 
 #'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 
 #'  are the recommended parameter values. This example has a lower b_main, 
@@ -64,7 +64,7 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                           b_perm = 200, b1_pos = TRUE, b1_constr = TRUE, 
                           rs = FALSE, niter = 200, seed = NULL, 
                           family = "gaussian", plan_strategy = "multicore",
-                          stop_if_insig = FALSE, stop_thresh = 0.05, ...){
+                          stop_if_nonsig = FALSE, stop_thresh = 0.05, ...){
   
   # run main WQS 
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, 

@@ -297,12 +297,10 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     }
     
     p0 <- length(permstats[which(permstats <= p.value.obs)]) / niter
-    p0.se <- sqrt(p0 * (1 - p0) / niter)
-    
+
     perm_retlist <- list(pval = p0, 
                          testpval = p.value.obs,
-                         permpvals = permstats,
-                         pval_se = p0.se)
+                         permpvals = permstats)
     
     model$b1_pos <- b1_pos
 

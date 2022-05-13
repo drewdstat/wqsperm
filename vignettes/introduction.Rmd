@@ -27,14 +27,14 @@ rate tradeoff, as there is a machine learning step to determine the weights that
 optimize the linear model fit. If the full data is used to estimate both the mixture 
 component weights and the regression coefficients, there is high power but also a 
 high false positive rate since coefficient p-values are calculated for a weighted 
-mixture independent variable calculated using weights that have already been optimized 
-to find a large effect. 
+mixture independent variable that was calculated using weights that have already 
+been optimized to find a large effect. 
 
 We recently proposed alternative methods based on a permutation test that should 
 reliably allow for both high power and low false positive rate when utilizing WQS.
 The permutation test is a method of obtaining a p-value by simulating the null 
 distribution through permutations of the data. The permutation test algorithm 
-is described more in detail in (Day, 2022) and (Day, 2022).
+is described more in detail in (Day, 2022a) and (Day, 2022b).
 
 ## About WQS 
 
@@ -52,13 +52,18 @@ A full description of the WQS methodology is described in (Carrico, 2015).
 
 ## Permutation Test 
 
-The WQS regression comprises of two steps, for which we typically split the data 
+The WQS regression comprises two steps, for which we typically split the data 
 into a training and validation set. Doing this reduces statistical power since 
 we are training our model on only part of the data. On the other hand, if we skip this 
 training/test split, we can get a skewed representation of uncertainty for the WQS 
 coefficient. A permutation test method gives us a p-value for the 
 uncertainty while also allowing us to use the full dataset for training and 
-validation. 
+validation. This p-value is based on comparing a test value (e.g., coefficient or 
+naive p-values) to iterated values, and so the minimum non-zero p-value that can 
+be detected by the permutation test would be 1 divided by the number of permutation 
+test iterations. For example, if we run 200 iterations, we’d be able to define a 
+p-value of as low as 1/200 = 0.005, and any lower p-value would appear as zero 
+and be interpreted as <0.005.
 
 ### Continuous outcome algorithm (linear regression)
 
@@ -118,20 +123,22 @@ The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_per
 ### Arguments 
 
 `wqs_perm` uses a `gwqs` object (from the `gWQS` package) as an input. To use 
-`wqs_perm`, we first need to run an initial *WQS regression* while setting 
-`validation=0`. Note that permutation test can currently only take in `gwqs` 
-inputs where `family = "gaussian"` or `family = "binomial"`, and it is not
-currently equipped to handle stratified weights or WQS interaction terms. 
+`wqs_perm`, we first need to run an initial *permutation test reference WQS regression*
+run while setting `validation=0`. Note that permutation test can 
+currently only take in `gwqs` inputs where `family = "gaussian(link = "identity")"` or 
+`family = "binomial(link = "logit")"`, and it is not currently equipped to handle stratified 
+weights or WQS interaction terms. 
 
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` 
 function and set the following additional parameters: 
 
 * `boots`: Number of bootstraps for the WQS run in each permutation test iteration. 
 Note that we may elect a bootstrap count `boots` lower than that specified in the 
-`model` object for the sake of efficiency. If we do, `wqs_perm` will run the 
-permutation test WQS runs with the lower number of bootstraps. If `boots` is not 
-specified, then the function will use the same bootstrap count in the 
-permutation test WQS runs as that specified in the main WQS run.
+`model` object for the sake of efficiency. If we do, `wqs_perm` will run the
+iterated WQS regressions for the permutation test with the lower number of 
+bootstraps. If `boots` is not specified, then the function will use the same 
+bootstrap count in the permutation test iterated WQS regressions as that specified 
+in the main WQS regression.
 * `niter`: Number of permutation test iterations 
 * `b1_pos`: A logical value that indicates whether beta values should be positive 
 or negative
@@ -160,7 +167,6 @@ test
   * *Logistic regression only*
   * **testpval**: test reference p-value
   * **permpvals**: p-values from null models 
-  * **pval_se**: standard error for the p-value ß
 * **gwqs_main**: main gWQS object (same as `model` input)
 * **gwqs_perm**: permutation test reference gWQS object (NULL if model 
 `family = "binomial"` or if same number of bootstraps are used in permutation 
@@ -180,7 +186,7 @@ gWQS run and permutation test in one function call.
 
 To use `wqs_full_perm`, you must specify the same required arguments as needed in 
 the `gwqs` call. Note that permutation test can currently only handle 
-`family = "gaussian"` or `family = "binomial"`. 
+`family = "gaussian(link = "identity")"` or `family = "binomial(link = "logit")"`. 
 
 For the bootstrap count `b` argument, you must specify `b_main`,the number of 
 bootstraps for the *main WQS regression* run and `b_perm`, the number of 
@@ -189,8 +195,8 @@ before, you can choose to set `b_main` $>$ `b_perm` for the sake of efficiency.
 Finally, you should indicate the number of desired permutation test runs `niter`.
 
 Since the WQS permutation test can be computationally intensive, you can specify 
-`stop_if_insig = TRUE` if you do not wish for the permutation test to proceed 
-if the naive main WQS run produces an insignificant result (if the p-value 
+`stop_if_nonsig = TRUE` if you do not wish for the permutation test to proceed 
+if the naive main WQS run produces an nonsignificant result (if the p-value 
 is below the `stop_thresh` argument, defaulted at 0.05). 
 See *Recommendations for Use* section below.
 

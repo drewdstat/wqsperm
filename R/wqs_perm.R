@@ -27,6 +27,8 @@
 #' in the permutation test WQS runs as that specified in the main WQS run.
 #' @param b1_pos A logical value that indicates whether beta values should be 
 #' positive or negative.
+#' @param b1_constr Logical value that determines whether to apply positive or 
+#' negative constraints in the optimization function for the weight optimization.
 #' @param rs A logical value indicating whether random subset implementation 
 #' should be performed. 
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose 
@@ -50,7 +52,7 @@
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
 #' test WQS runs as in the main run).}
-#' @import gWQS ggplot2 viridis cowplot
+#' @import gWQS ggplot2 viridis cowplot stats
 #' @export wqs_perm
 #'
 #' @examples
@@ -59,13 +61,13 @@
 #' # mixture names
 #' PCBs <- names(wqs_data)[1:34]
 #' 
-#' # create reference wqs object with 1000 bootstraps
+#' # create reference wqs object with 10 bootstraps
 #' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, 
-#'                  validation = 0, b = 1000, b1_pos = T, 
+#'                  validation = 0, b = 10, b1_pos = TRUE, 
 #'                  plan_strategy = "multicore", family = "gaussian", seed = 16)
 #' 
 #' # run permutation test
-#' perm_test_res <- wqs_perm(wqs_main, niter = 10, b1_pos = T)
+#' perm_test_res <- wqs_perm(wqs_main, niter = 10, b1_pos = TRUE)
 #' 
 #' # Note: The default value of niter = 200 is the recommended parameter values. 
 #' # This example has a lower niter in order to serve as a shorter test run. 
@@ -101,7 +103,16 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   mm <- model$fit
   formchar <- as.character(formula(mm))
 
-  if (!is.null(model$stratified) | grepl("wqs:", formchar[3], fixed = T))
+  if (length(formchar) == 1) {
+    tempchar <- rep(NA, 3)
+    tempchar[1] <- "~"
+    tempchar[2] <- gsub("\\ ~.*", "", formchar)
+    tempchar[3] <- gsub(".*\\~ ", "", formchar)
+    formchar <- tempchar
+    rm(tempchar)
+  }
+  
+  if (!is.null(model$stratified) | grepl("wqs:", formchar[3], fixed = TRUE))
   {
     # TODO: We should be able to accomodate stratified weights though we haven't 
     # tested that yet, and I'm not sure it makes sense to have stratified weights 
@@ -149,7 +160,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
       # This is the permutation test algorithm when there are multiple independent 
       # variables in the model
       lm_form <- formula(paste0(formchar[2], formchar[1], 
-                                gsub("wqs + ", "", formchar[3], fixed = T)))
+                                gsub("wqs + ", "", formchar[3], fixed = TRUE)))
       fit.partial <- lm(lm_form, data = Data)
       partial.yhat <- predict(fit.partial)
       partial.resid <- resid(fit.partial)
@@ -181,8 +192,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
                               plan_strategy = plan_strategy, b1_pos = b1_pos, 
                               b1_constr = b1_constr))
       }, error = function(e) NULL, 
-      warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), 
-                                   message("WQS failed")))
+      warning = function(e) if (rs == TRUE) message("WQSRS failed") else message("WQS failed"))
       
       if (is.null(gwqs1))
         lm1 <- NULL else lm1 <- gwqs1$fit
@@ -216,7 +226,12 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     model$b1_pos <- b1_pos
     perm_ref_wqs$b1_pos <- b1_pos
     
-    ret_ref_wqs <- ifelse(boots == length(model$bindex), NULL, perm_ref_wqs)
+    if (boots == length(model$bindex)){
+      ret_ref_wqs <- NULL
+    } 
+    else{
+      ret_ref_wqs <- perm_ref_wqs
+    }
   } 
   
   else if (model$family$family == "binomial"){
@@ -224,7 +239,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     
     initialfit <- function(m) {
       newform <- formula(paste0(m, "~", gsub("wqs + ", "", formchar[3], 
-                                             fixed = T)))
+                                             fixed = TRUE)))
       
       fit.x1 <- lm(newform, data = Data)
       return(resid(fit.x1))
@@ -241,11 +256,11 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
                             family = model$family$family, seed = seed,
                             b1_constr = b1_constr))
     }, error = function(e) NULL, 
-    warning = function(e) ifelse(rs == TRUE, message("WQSRS failed"), message("WQS failed")))
+    warning = function(e) if (rs == TRUE) message("WQSRS failed") else message("WQS failed"))
     
     fit1 <- lwqs1$fit
     fit2 <- glm(formula(paste0(yname, formchar[1], gsub("wqs + ", "", 
-                                                        formchar[3], fixed = T))), 
+                                                        formchar[3], fixed = TRUE))), 
                 data = Data, family = model$family$family)
     
     p.value.obs <- 1 - pchisq(abs(fit1$deviance - fit2$deviance), 1)
@@ -272,10 +287,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
                               b1_pos = b1_pos, family = model$family$family,
                               b1_constr = b1_constr)
           )}, error = function(e) NULL, 
-        warning = function(e) ifelse(rs == TRUE, 
-                                     message("WQSRS failed"), 
-                                     message("WQS failed")))
-      
+        warning = function(e) if (rs == TRUE) message("WQSRS failed") else message("WQS failed"))
       
       if (is.null(gwqs1))
         lm1 <- NULL
@@ -318,7 +330,6 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
 }
 
 #' @rawNamespace S3method(print, wqs_perm)
-#' @rdname methods
 print.wqs_perm <- function(x, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
@@ -332,14 +343,13 @@ print.wqs_perm <- function(x, ...){
 }
 
 #' @rawNamespace S3method(summary, wqs_perm)
-#' @rdname methods
-summary.wqs_perm <- function(x, ...){
+summary.wqs_perm <- function(object, ...){
   
   cat("Permutation test WQS coefficient p-value: \n", 
-      x$perm_test$pval,
+      object$perm_test$pval,
       "\n")
   
-  main_sum <- summary(x$gwqs_main)
+  main_sum <- summary(object$gwqs_main)
   
   print(main_sum)
   
@@ -382,9 +392,12 @@ summary.wqs_perm <- function(x, ...){
 #' test p-value.}
 #' \item{WtPlot}{A heatmap of the WQS weights for each mixture component.}
 #' \item{WtLegend}{A legend for the weights in the WtPlot heatmap.}
+#' 
+#' @importFrom rlang .data
+#' 
 #' @export
 #'
-plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE, 
+wqsperm_plot <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE, 
                           AltMixName = NULL, AltOutcomeName = NULL, 
                           ViridisPalette = "D", StripTextSize = 14,
                           AxisTextSize.Y = 12, AxisTextSize.X = 12, 
@@ -429,13 +442,13 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
       WQSResults$UCI + (WQSResults$UCI / 10))
   if (widercirange[1] < 0 & widercirange[2] > 0) {
     gg1 <-
-      ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
+      ggplot(WQSResults, aes(x = .data$Outcome, y = .data$Beta)) + geom_point(size = 3) +
       theme_bw() +
-      geom_errorbar(aes(ymin = LCI, ymax = UCI),
+      geom_errorbar(aes(ymin = .data$LCI, ymax = .data$UCI),
                     size = 1,
                     width = 0.75) +
       geom_hline(yintercept = 0) +
-      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), 
+      geom_text(aes(label = .data$PTlabel, y = .data$UCI + cirange / 10), 
                 size = PvalLabelSize) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
@@ -447,12 +460,12 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
       )
   } else {
     gg1 <-
-      ggplot(WQSResults, aes(x = Outcome, y = Beta)) + geom_point(size = 3) +
+      ggplot(WQSResults, aes(x = .data$Outcome, y = .data$Beta)) + geom_point(size = 3) +
       theme_bw() +
-      geom_errorbar(aes(ymin = LCI, ymax = UCI),
+      geom_errorbar(aes(ymin = .data$LCI, ymax = .data$UCI),
                     size = 1,
                     width = 0.75) +
-      geom_text(aes(label = PTlabel, y = UCI + cirange / 10), 
+      geom_text(aes(label = .data$PTlabel, y = .data$UCI + cirange / 10), 
                 size = PvalLabelSize) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
@@ -514,8 +527,8 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
       ggplot(data.frame(Weight = factor(
         levels(WQSwts$Weight), levels = levels(WQSwts$Weight)
       )),
-      aes(x = 1, y = Weight)) +
-      geom_tile(aes(fill = Weight)) + scale_fill_manual(values = mypal) +
+      aes(x = 1, y = .data$Weight)) +
+      geom_tile(aes(fill = .data$Weight)) + scale_fill_manual(values = mypal) +
       theme(
         legend.position = "bottom",
         legend.title = element_text(size = 14, face = "bold"),
@@ -523,10 +536,10 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
       )
     l1 <- cowplot::get_legend(legplot)
     
-    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + 
+    gg2 <- ggplot(WQSwts, aes(x = .data$Outcome, y = .data$Exposure)) + 
       theme_classic() +
-      geom_tile(aes(fill = Weight), alpha = 0.7) + 
-      geom_text(aes(label =round(Wt, 2)), size = HeatMapTextSize) +
+      geom_tile(aes(fill = .data$Weight), alpha = 0.7) + 
+      geom_text(aes(label =round(.data$Wt, 2)), size = HeatMapTextSize) +
       scale_fill_manual(values = Virclr) +
       facet_grid(FacetLabel ~ Direction) +
       theme(
@@ -541,10 +554,10 @@ plot.wqs_perm <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
         legend.text = element_text(size = LegendTextSize)
       )
   } else {
-    gg2 <- ggplot(WQSwts, aes(x = Outcome, y = Exposure)) + 
+    gg2 <- ggplot(WQSwts, aes(x = .data$Outcome, y = .data$Exposure)) + 
       theme_classic() +
-      geom_tile(aes(fill = Weight), alpha = 0.7) + 
-      geom_text(aes(label = round(Weight, 2)), size = HeatMapTextSize) +
+      geom_tile(aes(fill = .data$Weight), alpha = 0.7) + 
+      geom_text(aes(label = round(.data$Weight, 2)), size = HeatMapTextSize) +
       scale_fill_viridis_c(option = ViridisPalette) +
       facet_grid(FacetLabel ~ Direction) +
       theme(

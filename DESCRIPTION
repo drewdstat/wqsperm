@@ -1,14 +1,17 @@
 Package: wqsperm
 Title: Permutation test for weighted quantile regression
 Version: 1.0.1
-Authors: Drew Day, James Peng, Adam Szpiro
+Authors@R: c(
+    person("Drew", "Day", email = "Drew.Day@seattlechildrens.org", role = c("aut", "cre")),
+    person("James", "Peng", email = "jpspeng@uw.edu", role = "aut"),
+    person("Adam", "Szpiro", email = "aszpiro@uw.edu", role = "aut"))
 Description: Implements the permutation test for weighted quantile regression (Day, 2022). 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
-    gWQS, pbapply, ggplot2, mvtnorm, viridis, extraDistr, cowplot	
+    rlang, gWQS, pbapply, ggplot2, mvtnorm, viridis, extraDistr, cowplot	
 Suggests: 
     rmarkdown, knitr, testthat (>= 3.0.0)
 VignetteBuilder: knitr

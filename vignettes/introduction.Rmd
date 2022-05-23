@@ -281,7 +281,7 @@ perm_test_res1$perm_test$pval
 Here are the summary plots: 
 
 ```{r, fig.height = 6, cache = T}
-plot(perm_test_res1)$FullPlot
+wqsperm_plot(perm_test_res1)$FullPlot
 ```
 
 
@@ -344,7 +344,7 @@ perm_test_res2$perm_test$pval
 Here are the summary plots: 
 
 ```{r, fig.height = 6, cache = T}
-plot(perm_test_res2)$FullPlot
+wqsperm_plot(perm_test_res2)$FullPlot
 ```
 
 ## Example 3 (using `wqsfullperm`)
@@ -364,7 +364,7 @@ perm_test_res <- wqs_full_perm(y ~ wqs,
                                seed = 16,
                                plan_strategy = "multicore")
 
-plot(perm_test_res)$FullPlot
+wqsperm_plot(perm_test_res)$FullPlot
 ```
 
 
@@ -407,7 +407,7 @@ perm_test_res <- wqs_full_perm(y ~ wqs,
                                plan_strategy = "multicore",
                                family = "binomial")
 
-plot(perm_test_res)$FullPlot
+wqsperm_plot(perm_test_res)$FullPlot
 ```
 
-
+# References

@@ -50,15 +50,20 @@
 #' @export wqs_full_perm
 #'
 #' @examples
+#' library(gWQS)
+#'
+#' # mixture names
+#' PCBs <- names(wqs_data)[1:34]
+#' 
 #'  perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, 
 #'                                 mix_name = PCBs, q = 10, b_main = 10, 
-#'                                 b_perm = 5, b1_pos = T, niter = 10,
+#'                                 b_perm = 5, b1_pos = TRUE, niter = 10,
 #'                                 seed = 16, plan_strategy = "multicore", 
 #'                                 stop_if_nonsig = FALSE)
 #' 
 #'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 
-#'  are the recommended parameter values. This example has a lower b_main, 
-#'  b_perm, and niter in order to serve as a shorter test run. 
+#'  # are the recommended parameter values. This example has a lower b_main, 
+#'  # b_perm, and niter in order to serve as a shorter test run. 
 #'  
 wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000, 
                           b_perm = 200, b1_pos = TRUE, b1_constr = TRUE, 
@@ -76,15 +81,22 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
   naive_p <- summary(gwqs_res_main)$coefficients["wqs", 4]
 
   if (naive_p > stop_thresh){
-    stop(sprintf("The main WQS run did not give a significant result (p = %s)", 
-                 naive_p))
+    message(sprintf("The main WQS run did not give a significant result (p = %s)", 
+                    naive_p))
+    
+    results <- list(gwqs_main = gwqs_res_main, 
+                    family = gwqs_res_main$family$family,
+                    gwqs_perm = NULL, 
+                    perm_test = NULL)
   }
-
+  else{
   
-  # run permutation test (using wqs_perm function) 
-  results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, 
-                      b1_pos = b1_pos, b1_constr = b1_constr, rs = rs, 
-                      plan_strategy = plan_strategy, seed = seed)
+    # run permutation test (using wqs_perm function) 
+    results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, 
+                        b1_pos = b1_pos, b1_constr = b1_constr, rs = rs, 
+                        plan_strategy = plan_strategy, seed = seed)
+    
+  }
   
   class(results) <- "wqs_perm"
   

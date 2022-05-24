@@ -28,7 +28,8 @@ that should reliably allow for both high power and low false positive
 rate when utilizing the WQSr. The permutation test is a method of
 obtaining a p-value by simulating the null distribution through
 permutations of the data. The permutation test algorithm is described
-more in detail in (reference Drew’s paper).
+more in detail
+[here](https://www.sciencedirect.com/science/article/pii/S0160412021000337).
 
 ## Installation
 

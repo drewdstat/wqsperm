@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 # Introduction 
 
 Weighted quantile sum (WQS) regression is a statistical technique to evaluate the 
-effect of complex exposure mixtures on an outcome (Carrico, 2015). It is a 
+effect of complex exposure mixtures on an outcome ([Carrico 2015](https://link.springer.com/article/10.1007/s13253-014-0180-3)). It is a 
 single-index method which estimates a combined mixture sum effect as well as weights 
 determining each individual mixture component's contributions to the sum effect. 
 However, the model features a statistical power and Type I error (i.e., false positive) 
@@ -33,8 +33,8 @@ been optimized to find a large effect.
 We recently proposed alternative methods based on a permutation test that should 
 reliably allow for both high power and low false positive rate when utilizing WQS.
 The permutation test is a method of obtaining a p-value by simulating the null 
-distribution through permutations of the data. The permutation test algorithm 
-is described more in detail in (Day, 2022a) and (Day, 2022b).
+distribution through permutations of the data ([Loftus 2021](https://www.sciencedirect.com/science/article/pii/S0160412021000337), 
+Drew 2022a).
 
 ## About WQS 
 
@@ -48,7 +48,7 @@ coefficient for the weighted quantile sum, $\sum_{i=1}^{c} w_i {X_q}_i$ is the
 weighted index for the set of quantiled mixture exposures, $Z$ is the set of 
 covariates, and $\gamma$ is the regression coefficients for the covariates. 
 
-A full description of the WQS methodology is described in (Carrico, 2015). 
+A full description of the WQS methodology is described in [Carrico 2015](https://link.springer.com/article/10.1007/s13253-014-0180-3). 
 
 ## Permutation Test 
 
@@ -122,7 +122,7 @@ The two main functions of the `wqsPerm` package are `wqs_perm` and `wqs_full_per
 
 ### Arguments 
 
-`wqs_perm` uses a `gwqs` object (from the `gWQS` package) as an input. To use 
+`wqs_perm` uses a `gwqs` object (from the `gWQS` [package](https://cran.r-project.org/web/packages/gWQS/gWQS.pdf)) as an input. To use 
 `wqs_perm`, we first need to run an initial *permutation test reference WQS regression*
 run while setting `validation=0`. Note that permutation test can 
 currently only take in `gwqs` inputs where `family = "gaussian(link = "identity")"` or 
@@ -143,7 +143,7 @@ in the main WQS regression.
 * `b1_pos`: A logical value that indicates whether beta values should be positive 
 or negative
 * `rs`: A logical value indicating whether the random subset implementation for WQS 
-should be performed (Curtin, 2021)
+should be performed ([Curtin 2021](https://www.tandfonline.com/doi/abs/10.1080/03610918.2019.1577971?journalCode=lssp20))
 * `plan_strategy`: Evaluation strategy for the plan function ("sequential", 
 "transparent", "multisession", "multicore", "multiprocess", "cluster",
 or "remote"). See gWQS package documentation for full details.  
@@ -210,7 +210,8 @@ WQS test approaches significance or near-significance. If the naive test produce
 a non-significant result, then there likely is no reason to run the permutation 
 test, as it will produce a result which is more conservative than the naive 
 method. This is the strategy that we have applied in our published papers 
-(Loftus 2021 and Day 2021). 
+([Loftus 2021](https://www.sciencedirect.com/science/article/pii/S0160412021000337) and 
+[Day 2021](https://www.sciencedirect.com/science/article/pii/S0160412020322856)). 
 
 # Examples 
 
@@ -411,3 +412,25 @@ wqsperm_plot(perm_test_res)$FullPlot
 ```
 
 # References
+* Carrico, C., Gennings, C., Wheeler, D. C., & Factor-Litvak, P. (2015). Characterization 
+of weighted quantile sum regression for highly correlated data in a risk analysis 
+setting. Journal of Agricultural, Biological, and Environmental Statistics, 20(1), 
+100-120.
+
+* Curtin, P., Kellogg, J., Cech, N., & Gennings, C. (2021). A random subset implementation 
+of weighted quantile sum (WQSRS) regression for analysis of high-dimensional mixtures. 
+Communications in Statistics-Simulation and Computation, 50(4), 1119-1134.
+
+* Day, D. B., Collett, B. R., Barrett, E. S., Bush, N. R., Swan, S. H., Nguyen, R. H., 
+... & Sathyanarayana, S. (2021). Phthalate mixtures in pregnancy, autistic traits, 
+and adverse childhood behavioral outcomes. Environment International, 147, 106330.
+
+* Day, D., Sathyanarayana, S., LeWinn, K., Bush, N., Karr, C., Mason, A., Szpiro, A. (2022). A Comparison of Methods for Quantifying Associations with Mixtures of Environmental Chemical Exposures. Under Review.
+
+* Loftus, C. T., Bush, N. R., Day, D. B., Ni, Y., Tylavsky, F. A., Karr, C. J., ... & 
+LeWinn, K. Z. (2021). Exposure to prenatal phthalate mixtures and neurodevelopment 
+in the Conditions Affecting Neurocognitive Development and Learning in Early 
+childhood (CANDLE) study. Environment International, 150, 106409.
+
+* Renzetti, S., Curtin, P., Just, A. C., Bello, G., Gennings, C., & Rsolnp, I. (2021). 
+Package ‘gWQS’.

@@ -2,6 +2,7 @@ Package: wqsperm
 Title: Permutation test for weighted quantile regression
 Version: 1.0.1
 Author: Drew Day, James Peng, Adam Szpiro
+Maintainer: James Peng <jpspeng@uw.edu>
 Authors@R: c(
     person("Drew", "Day", email = "Drew.Day@seattlechildrens.org", role = c("aut", "cre")),
     person("James", "Peng", email = "jpspeng@uw.edu", role = "aut"),

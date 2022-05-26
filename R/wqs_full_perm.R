@@ -80,7 +80,7 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
   
   naive_p <- summary(gwqs_res_main)$coefficients["wqs", 4]
 
-  if (naive_p > stop_thresh){
+  if (stop_if_nonsig == TRUE & naive_p > stop_thresh){
     message(sprintf("The main WQS run did not give a significant result (p = %s)", 
                     naive_p))
     

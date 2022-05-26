@@ -90,7 +90,6 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                     perm_test = NULL)
   }
   else{
-  
     # run permutation test (using wqs_perm function) 
     results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, 
                         b1_pos = b1_pos, b1_constr = b1_constr, rs = rs, 

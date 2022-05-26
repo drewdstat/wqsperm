@@ -404,6 +404,12 @@ wqsperm_plot <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
                           LegendTextSize = 14, PvalLabelSize = 5, 
                           HeatMapTextSize = 5) {
   
+  if (is.null(wqspermresults$perm_test)){
+    stop("There are no permutation test results in this wqsperm object because 
+         the naive WQS run did not return a significant result and 
+         stop_if_nonsig was set equal to TRUE in the wqsperm call.")
+  }
+  
   wqs_fam <- wqspermresults$family
 
   thisfit <- wqspermresults$gwqs_main$fit

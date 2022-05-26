@@ -1,7 +1,7 @@
 ---
 title: "How to use the wqsperm package"
 author: "Drew Day, James Peng"
-date: "5/5/2022"
+date: "5/26/2022"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
@@ -34,7 +34,7 @@ We recently proposed alternative methods based on a permutation test that should
 reliably allow for both high power and low false positive rate when utilizing WQS.
 The permutation test is a method of obtaining a p-value by simulating the null 
 distribution through permutations of the data ([Loftus 2021](https://www.sciencedirect.com/science/article/pii/S0160412021000337), 
-Drew 2022a).
+Drew 2022).
 
 ## About WQS 
 

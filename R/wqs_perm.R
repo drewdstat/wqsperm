@@ -63,7 +63,7 @@
 #' 
 #' # create reference wqs object with 10 bootstraps
 #' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, 
-#'                  validation = 0, b = 10, b1_pos = TRUE, 
+#'                  validation = 0, b = 10, b1_pos = TRUE, b1_constr = FALSE,
 #'                  plan_strategy = "multicore", family = "gaussian", seed = 16)
 #' 
 #' # run permutation test
@@ -89,7 +89,7 @@
 #' Environment international, 150, 106409.
 #' 
 wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, 
-                     b1_constr = TRUE, rs = FALSE, plan_strategy = "multicore", 
+                     b1_constr = FALSE, rs = FALSE, plan_strategy = "multicore", 
                      seed = NULL) {
   
   if (class(model) == "gwqs") {

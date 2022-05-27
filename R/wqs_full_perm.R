@@ -57,8 +57,8 @@
 #' 
 #'  perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, 
 #'                                 mix_name = PCBs, q = 10, b_main = 10, 
-#'                                 b_perm = 5, b1_pos = TRUE, niter = 10,
-#'                                 seed = 16, plan_strategy = "multicore", 
+#'                                 b_perm = 5, b1_pos = TRUE, b1_constr = FALSE, 
+#'                                 niter = 10, seed = 16, plan_strategy = "multicore", 
 #'                                 stop_if_nonsig = FALSE)
 #' 
 #'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 
@@ -66,7 +66,7 @@
 #'  # b_perm, and niter in order to serve as a shorter test run. 
 #'  
 wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000, 
-                          b_perm = 200, b1_pos = TRUE, b1_constr = TRUE, 
+                          b_perm = 200, b1_pos = TRUE, b1_constr = FALSE, 
                           rs = FALSE, niter = 200, seed = NULL, 
                           family = "gaussian", plan_strategy = "multicore",
                           stop_if_nonsig = FALSE, stop_thresh = 0.05, ...){

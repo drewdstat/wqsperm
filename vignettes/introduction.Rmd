@@ -353,7 +353,7 @@ wqsperm_plot(perm_test_res2)$FullPlot
 Using the same data as in Example 1, we run the WQS regression with permutation
 test using the full wrapper `wqs_full_perm` call.
 
-```{r, fig.height = 6, cache = T}
+```{r, fig.height = 6, cache = T, warning = F}
 perm_test_res <- wqs_full_perm(y ~ wqs,
                                data = sim_data1,
                                mix_name = mix_names1,

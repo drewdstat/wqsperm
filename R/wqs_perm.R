@@ -44,9 +44,8 @@
 #' \item{perm_test}{List containing: (1) `pval`: permutation test p-value, (2) (linear 
 #' regression only) `testbeta1`: reference WQS coefficient 
 #' beta1 value, (3) (linear regression only) `betas`: Vector of beta values from each 
-#' permutation test run, (4) (logistic regression only) `pval_se`: standard error 
-#' for the p-value, (5) (logistic regression only) `testpval`: test reference 
-#' p-value, (6) (logistic regression only) `permpvals`: p-values from the null 
+#' permutation test run, (4) (logistic regression only) `testpval`: test reference 
+#' p-value, (5) (logistic regression only) `permpvals`: p-values from the null 
 #' models.}
 #' \item{gwqs_main}{Main gWQS object (same as model input).}
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 

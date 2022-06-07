@@ -137,14 +137,14 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     nq <- NULL
   }
   
+  if (is.null(boots)){
+    boots <- length(model$bindex)
+  }
+  
   if (model$family$family == "gaussian"){
     Data <- model$data[model$vindex, -which(names(model$data) %in% c("wqs", "wghts"))]
     
     # reference WQS regression run 
-    if (is.null(boots)){
-      boots <- length(model$bindex)
-    }
-    
     if (boots == length(model$bindex)){
       perm_ref_wqs <- model
       ref_beta1 <- mm$coef[2]

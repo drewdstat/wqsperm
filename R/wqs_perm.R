@@ -4,17 +4,19 @@
 #' test (Day et al, 2022) to obtain an estimate for the p-value significance for 
 #' the WQS coefficient.  
 #' 
-#' To use `wqs_perm`, we first need to run an initial WQS regression while setting 
-#' `validation=0`. We will use this `gwqs` object as the model argument for the 
-#' `wqs_perm` function. Note that permutation test can currently only take in `gwqs` 
-#' inputs where `family = "gaussian"` or `family = "binomial"`, and it is not
-#' currently equipped to handle stratified weights or WQS interaction terms.
+#' To use `wqs_perm`, we first need to run an initial WQS regression run while 
+#' setting `validation=0`. We will use this `gwqs` object as the model argument 
+#' for the `wqs_perm` function. Note that permutation test can currently only 
+#' take in `gwqs` inputs where `family = "gaussian"` or `family = "binomial"`, 
+#' and it is not currently equipped to handle stratified weights or WQS 
+#' interaction terms.
 #' 
-#' The argument `boots` is the number of bootstraps for the WQS run in each 
-#' permutation test iteration. Note that we may elect a bootstrap count `boots` 
-#' lower than that specified in the model object for the sake of efficiency. If 
-#' `boots` is not specified, then we will use the same bootstrap count in the 
-#' permutation test WQS runs as that specified in the model argument.
+#' The argument `boots` is the number of bootstraps for the WQS regression run 
+#' in each permutation test iteration. Note that we may elect a bootstrap count 
+#' `boots` lower than that specified in the model object for the sake of 
+#' efficiency. If `boots` is not specified, then we will use the same bootstrap 
+#' count in the permutation test WQS regression runs as that specified in the 
+#' model argument.
 #'
 #' The arguments `b1_pos` and `rs` should be consistent with the inputs chosen 
 #' in the model object. The seed should ideally be consistent with the seed set 
@@ -24,7 +26,8 @@
 #' @param niter Number of permutation test iterations. 
 #' @param boots Number of bootstrap samples for each permutation test \code{wqs} 
 #' run. If `boots` is not specified, then we will use the same bootstrap count 
-#' in the permutation test WQS runs as that specified in the main WQS run.
+#' in the permutation test WQS regression runs as that specified in the main WQS 
+#' regression run.
 #' @param b1_pos A logical value that indicates whether beta values should be 
 #' positive or negative.
 #' @param b1_constr Logical value that determines whether to apply positive or 
@@ -36,7 +39,7 @@
 #' "multiprocess", "cluster" and "remote." See gWQS documentation for full 
 #' details. 
 #' @param seed (optional) Random seed for the permutation test WQS reference run. 
-#' This should be the same random seed as used for the main WQS run. 
+#' This should be the same random seed as used for the main WQS regression run. 
 #'
 #' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains 
 #' three sublists: 
@@ -50,7 +53,7 @@
 #' \item{gwqs_main}{Main gWQS object (same as model input).}
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
-#' test WQS runs as in the main run).}
+#' test WQS regression runs as in the main run).}
 #' @import gWQS ggplot2 viridis cowplot stats
 #' @export wqs_perm
 #'
@@ -90,6 +93,8 @@
 wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE, 
                      b1_constr = FALSE, rs = FALSE, plan_strategy = "multicore", 
                      seed = NULL) {
+  
+  pbapply::pboptions(type="timer")
   
   if (class(model) == "gwqs") {
     if (!model$family$family %in% c("gaussian", "binomial") | 
@@ -135,7 +140,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   if (model$family$family == "gaussian"){
     Data <- model$data[model$vindex, -which(names(model$data) %in% c("wqs", "wghts"))]
     
-    # reference WQS run 
+    # reference WQS regression run 
     if (is.null(boots)){
       boots <- length(model$bindex)
     }
@@ -405,7 +410,7 @@ wqsperm_plot <- function(wqspermresults, FixedPalette = FALSE, InclKey = FALSE,
   
   if (is.null(wqspermresults$perm_test)){
     stop("There are no permutation test results in this wqsperm object because 
-         the naive WQS run did not return a significant result and 
+         the naive WQS regression run did not return a significant result and 
          stop_if_nonsig was set equal to TRUE in the wqsperm call.")
   }
   

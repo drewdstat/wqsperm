@@ -132,7 +132,7 @@ weights or WQS interaction terms.
 We will use this `gwqs` object as the `model` argument for the `wqs_perm` 
 function and set the following additional parameters: 
 
-* `boots`: Number of bootstraps for the WQS run in each permutation test iteration. 
+* `boots`: Number of bootstraps for the WQS regression run in each permutation test iteration. 
 Note that we may elect a bootstrap count `boots` lower than that specified in the 
 `model` object for the sake of efficiency. If we do, `wqs_perm` will run the
 iterated WQS regressions for the permutation test with the lower number of 
@@ -170,7 +170,7 @@ test
 * **gwqs_main**: main gWQS object (same as `model` input)
 * **gwqs_perm**: permutation test reference gWQS object (NULL if model 
 `family = "binomial"` or if same number of bootstraps are used in permutation 
-test WQS runs as in the main run.)
+test WQS regression runs as in the main run.)
 
 ### Plotting method
 
@@ -182,7 +182,7 @@ with the naive confidence intervals as well as the permutation test p-value and
 ## `wqs_full_perm` 
 
 The second function `wqs_full_perm` is a full wrapper which implements the initial 
-gWQS run and permutation test in one function call. 
+gWQS regression run and permutation test in one function call. 
 
 To use `wqs_full_perm`, you must specify the same required arguments as needed in 
 the `gwqs` call. Note that permutation test can currently only handle 
@@ -196,7 +196,7 @@ Finally, you should indicate the number of desired permutation test runs `niter`
 
 Since the WQS permutation test can be computationally intensive, you can specify 
 `stop_if_nonsig = TRUE` if you do not wish for the permutation test to proceed 
-if the naive main WQS run produces an nonsignificant result (if the p-value 
+if the naive main WQS regression run produces an nonsignificant result (if the p-value 
 is below the `stop_thresh` argument, defaulted at 0.05). 
 See *Recommendations for Use* section below.
 

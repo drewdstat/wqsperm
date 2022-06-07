@@ -193,7 +193,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><code>wqs_perm</code> uses a <code>gwqs</code> object (from the <code>gWQS</code> <a href="https://cran.r-project.org/web/packages/gWQS/gWQS.pdf">package</a>) as an input. To use <code>wqs_perm</code>, we first need to run an initial <em>permutation test reference WQS regression</em> run while setting <code>validation=0</code>. Note that permutation test can currently only take in <code>gwqs</code> inputs where <code>family = &quot;gaussian(link = &quot;identity&quot;)&quot;</code> or <code>family = &quot;binomial(link = &quot;logit&quot;)&quot;</code>, and it is not currently equipped to handle stratified weights or WQS interaction terms.</p>
 <p>We will use this <code>gwqs</code> object as the <code>model</code> argument for the <code>wqs_perm</code> function and set the following additional parameters:</p>
 <ul>
-<li><code>boots</code>: Number of bootstraps for the WQS run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. If we do, <code>wqs_perm</code> will run the iterated WQS regressions for the permutation test with the lower number of bootstraps. If <code>boots</code> is not specified, then the function will use the same bootstrap count in the permutation test iterated WQS regressions as that specified in the main WQS regression.</li>
+<li><code>boots</code>: Number of bootstraps for the WQS regression run in each permutation test iteration. Note that we may elect a bootstrap count <code>boots</code> lower than that specified in the <code>model</code> object for the sake of efficiency. If we do, <code>wqs_perm</code> will run the iterated WQS regressions for the permutation test with the lower number of bootstraps. If <code>boots</code> is not specified, then the function will use the same bootstrap count in the permutation test iterated WQS regressions as that specified in the main WQS regression.</li>
 <li><code>niter</code>: Number of permutation test iterations</li>
 <li><code>b1_pos</code>: A logical value that indicates whether beta values should be positive or negative</li>
 <li><code>rs</code>: A logical value indicating whether the random subset implementation for WQS should be performed (<a href="https://www.tandfonline.com/doi/abs/10.1080/03610918.2019.1577971?journalCode=lssp20">Curtin 2021</a>)</li>
@@ -218,7 +218,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><strong>permpvals</strong>: p-values from null models</li>
 </ul></li>
 <li><strong>gwqs_main</strong>: main gWQS object (same as <code>model</code> input)</li>
-<li><strong>gwqs_perm</strong>: permutation test reference gWQS object (NULL if model <code>family = &quot;binomial&quot;</code> or if same number of bootstraps are used in permutation test WQS runs as in the main run.)</li>
+<li><strong>gwqs_perm</strong>: permutation test reference gWQS object (NULL if model <code>family = &quot;binomial&quot;</code> or if same number of bootstraps are used in permutation test WQS regression runs as in the main run.)</li>
 </ul>
 </div>
 <div id="plotting-method" class="section level3">
@@ -228,10 +228,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="wqs_full_perm" class="section level2">
 <h2><code>wqs_full_perm</code></h2>
-<p>The second function <code>wqs_full_perm</code> is a full wrapper which implements the initial gWQS run and permutation test in one function call.</p>
+<p>The second function <code>wqs_full_perm</code> is a full wrapper which implements the initial gWQS regression run and permutation test in one function call.</p>
 <p>To use <code>wqs_full_perm</code>, you must specify the same required arguments as needed in the <code>gwqs</code> call. Note that permutation test can currently only handle <code>family = &quot;gaussian(link = &quot;identity&quot;)&quot;</code> or <code>family = &quot;binomial(link = &quot;logit&quot;)&quot;</code>.</p>
 <p>For the bootstrap count <code>b</code> argument, you must specify <code>b_main</code>,the number of bootstraps for the <em>main WQS regression</em> run and <code>b_perm</code>, the number of bootstraps for the <em>permutation test reference WQS regression</em> run. As with before, you can choose to set <code>b_main</code> <span class="math inline">\(&gt;\)</span> <code>b_perm</code> for the sake of efficiency. Finally, you should indicate the number of desired permutation test runs <code>niter</code>.</p>
-<p>Since the WQS permutation test can be computationally intensive, you can specify <code>stop_if_nonsig = TRUE</code> if you do not wish for the permutation test to proceed if the naive main WQS run produces an nonsignificant result (if the p-value is below the <code>stop_thresh</code> argument, defaulted at 0.05). See <em>Recommendations for Use</em> section below.</p>
+<p>Since the WQS permutation test can be computationally intensive, you can specify <code>stop_if_nonsig = TRUE</code> if you do not wish for the permutation test to proceed if the naive main WQS regression run produces an nonsignificant result (if the p-value is below the <code>stop_thresh</code> argument, defaulted at 0.05). See <em>Recommendations for Use</em> section below.</p>
 <p>The <code>wqs_full_perm</code> returns an object of class <code>wqs_perm</code>, with outputs described above.</p>
 </div>
 <div id="recommendations-for-use" class="section level2">

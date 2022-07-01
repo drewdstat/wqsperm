@@ -57,9 +57,9 @@
 #' PCBs <- names(wqs_data)[1:34]
 #' 
 #'  perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, 
-#'                                 mix_name = PCBs, q = 10, b_main = 10, 
+#'                                 mix_name = PCBs, q = 10, b_main = 5, 
 #'                                 b_perm = 5, b1_pos = TRUE, b1_constr = FALSE, 
-#'                                 niter = 10, seed = 16, plan_strategy = "multicore", 
+#'                                 niter = 5, seed = 16, plan_strategy = "multicore", 
 #'                                 stop_if_nonsig = FALSE)
 #' 
 #'  # Note: The default values of b_main = 1000, b_perm = 200, and niter = 200 

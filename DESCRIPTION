@@ -1,19 +1,19 @@
 Package: wqsperm
-Title: Permutation test for weighted quantile regression
+Title: Permutation Test for Weighted Quantile Sum Regression
 Version: 1.0.1
-Author: Drew Day, James Peng, Adam Szpiro
-Maintainer: James Peng <jpspeng@uw.edu>
+Author: Drew Day [aut, cre], James Peng [aut], Adam Szpiro [aut]
+Maintainer: Drew Day <Drew.Day@seattlechildrens.org>
 Authors@R: c(
     person("Drew", "Day", email = "Drew.Day@seattlechildrens.org", role = c("aut", "cre")),
     person("James", "Peng", email = "jpspeng@uw.edu", role = "aut"),
     person("Adam", "Szpiro", email = "aszpiro@uw.edu", role = "aut"))
-Description: Implements a permutation test method for the weighted quantile sum (WQS) regression, building off the 'gWQS' package (Renzetti et al. <https://cran.r-project.org/web/packages/gWQS/gWQS.pdf>). Weighted quantile sum regression is a statistical technique to evaluate the effect of complex exposure mixtures on an outcome (Carrico et al. 2015 <doi:10.1007/s13253-014-0180-3>). The model features a statistical power and Type I error (i.e., false positive) rate tradeoff, as there is a machine learning step to determine the weights that optimize the linear model fit. This package provides an alternative method based on a permutation test that should reliably allow for both high power and low false positive rate when utilizing WQS regression (Loftus et al. 2021 <doi:10.1016/j.envint.2021.106409>).
+Description: Implements a permutation test method for the weighted quantile sum (WQS) regression, building off the 'gWQS' package (Renzetti et al. <https://CRAN.R-project.org/package=gWQS>). Weighted quantile sum regression is a statistical technique to evaluate the effect of complex exposure mixtures on an outcome (Carrico et al. 2015 <doi:10.1007/s13253-014-0180-3>). The model features a statistical power and Type I error (i.e., false positive) rate tradeoff, as there is a machine learning step to determine the weights that optimize the linear model fit. This package provides an alternative method based on a permutation test that should reliably allow for both high power and low false positive rate when utilizing WQS regression (Loftus et al. 2021 <doi:10.1016/j.envint.2021.106409>).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
-    rlang, gWQS, pbapply, ggplot2, mvtnorm, viridis, extraDistr, cowplot	
+    rlang, gWQS, pbapply, ggplot2, mvtnorm, viridis, extraDistr, cowplot, methods
 Suggests: 
     rmarkdown, knitr, testthat (>= 3.0.0)
 VignetteBuilder: knitr

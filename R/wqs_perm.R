@@ -54,7 +54,7 @@
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
 #' test WQS regression runs as in the main run).}
-#' @import gWQS ggplot2 viridis cowplot stats
+#' @import gWQS ggplot2 viridis cowplot stats methods
 #' @export wqs_perm
 #'
 #' @examples
@@ -63,13 +63,13 @@
 #' # mixture names
 #' PCBs <- names(wqs_data)[1:34]
 #' 
-#' # create reference wqs object with 10 bootstraps
+#' # create reference wqs object with 5 bootstraps
 #' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, 
-#'                  validation = 0, b = 10, b1_pos = TRUE, b1_constr = FALSE,
+#'                  validation = 0, b = 5, b1_pos = TRUE, b1_constr = FALSE,
 #'                  plan_strategy = "multicore", family = "gaussian", seed = 16)
 #' 
 #' # run permutation test
-#' perm_test_res <- wqs_perm(wqs_main, niter = 10, b1_pos = TRUE)
+#' perm_test_res <- wqs_perm(wqs_main, niter = 5, b1_pos = TRUE)
 #' 
 #' # Note: The default value of niter = 200 is the recommended parameter values. 
 #' # This example has a lower niter in order to serve as a shorter test run. 
@@ -96,7 +96,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   
   pbapply::pboptions(type="timer")
   
-  if (class(model) == "gwqs") {
+  if (is(model, "gwqs")) {
     if (!model$family$family %in% c("gaussian", "binomial") | 
         !model$family$link %in% c("identity", "logit")){
       stop("The permutation test is currently only set up to accomodate the 

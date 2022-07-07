@@ -19,7 +19,8 @@
 #' should be performed. 
 #' @param niter Number of permutation test iterations. 
 #' @param seed An integer to fix the seed. This will only impact the the initial 
-#' WQS regression run and not the permutation test iterations. 
+#' WQS regression run and not the permutation test iterations. If seed is set to
+#' NULL, a random seed will be chosen and saved in function output.
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose 
 #' among "sequential", "transparent", "multisession", "multicore", "multiprocess", 
 #' "cluster" and "remote." See gWQS documentation for full details. 
@@ -43,7 +44,8 @@
 #' permutation test run, (4) (logistic regression only) `testpval`: test reference 
 #' p-value, (5) (logistic regression only) `permpvals`: p-values from the null 
 #' models.}
-#' \item{gwqs_main}{Main gWQS object (same as model input).}
+#' \item{gwqs_main}{Main gWQS object (same as model input). This will now include an
+#' additional object "seed" that returns the seed used for this main WQS regression.}
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
 #' test WQS regression runs as in the main run).}
@@ -72,6 +74,8 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                           family = "gaussian", plan_strategy = "multicore",
                           stop_if_nonsig = FALSE, stop_thresh = 0.05, ...){
   
+  if(is.null(seed)) seed<-sample(1:1E6,1)
+  
   # run main WQS regression
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, 
                               q = q, b = b_main, b1_pos = b1_pos, 
@@ -79,6 +83,7 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                               validation = 0, family = family, 
                               plan_strategy = plan_strategy, ...) 
   
+  gwqs_res_main$seed<-seed
   naive_p <- summary(gwqs_res_main)$coefficients["wqs", 4]
 
   if (stop_if_nonsig == TRUE & naive_p > stop_thresh){
@@ -90,13 +95,11 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                     family = gwqs_res_main$family$family,
                     gwqs_perm = NULL, 
                     perm_test = NULL)
-  }
-  else{
+  } else {
     # run permutation test (using wqs_perm function) 
     results <- wqs_perm(gwqs_res_main, niter = niter, boots = b_perm, 
                         b1_pos = b1_pos, b1_constr = b1_constr, rs = rs, 
                         plan_strategy = plan_strategy, seed = seed)
-    
   }
   
   class(results) <- "wqs_perm"

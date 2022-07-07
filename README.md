@@ -38,7 +38,7 @@ You can install the development version of wqsperm from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("jpspeng/wqsperm")
+devtools::install_github("drewdstat/wqsperm")
 ```
 
 ## Usage

@@ -40,7 +40,7 @@
 #' details. 
 #' @param seed (optional) Random seed for the permutation test WQS reference run. 
 #' This should be the same random seed as used for the main WQS regression run. 
-#' This seed will be saved in the function output.
+#' This seed will be saved in the "gwqs_perm" object as "gwqs_perm$seed".
 #'
 #' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains: 
 #' 
@@ -230,6 +230,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
     
     model$b1_pos <- b1_pos
     perm_ref_wqs$b1_pos <- b1_pos
+    perm_ref_wqs$seed <- seed
     
     if (boots == length(model$bindex)){
       ret_ref_wqs <- NULL
@@ -327,8 +328,7 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   results <- list(gwqs_main = model, 
                   family = model$family$family,
                   gwqs_perm = ret_ref_wqs, 
-                  perm_test = perm_retlist,
-                  seed = seed)
+                  perm_test = perm_retlist)
   
   class(results) <- "wqs_perm"
   

@@ -57,7 +57,7 @@
 #' library(gWQS)
 #'
 #' # mixture names
-#' PCBs <- names(wqs_data)[1:34]
+#' PCBs <- names(wqs_data)[1:17] #half of the original 34 for quick computation
 #' 
 #'  perm_test_res <- wqs_full_perm(formula = yLBX ~ wqs, data = wqs_data, 
 #'                                 mix_name = PCBs, q = 10, b_main = 5, 

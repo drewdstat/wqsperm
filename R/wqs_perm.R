@@ -40,9 +40,9 @@
 #' details. 
 #' @param seed (optional) Random seed for the permutation test WQS reference run. 
 #' This should be the same random seed as used for the main WQS regression run. 
+#' This seed will be saved in the function output.
 #'
-#' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains 
-#' three sublists: 
+#' @return \code{wqs_perm} returns an object of class `wqs_perm`, which contains: 
 #' 
 #' \item{perm_test}{List containing: (1) `pval`: permutation test p-value, (2) (linear 
 #' regression only) `testbeta1`: reference WQS coefficient 
@@ -54,6 +54,7 @@
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
 #' test WQS regression runs as in the main run).}
+#' \item{seed}{Seed used for the permutation test reference WQS regression (gwqs_perm).}
 #' @import gWQS ggplot2 viridis cowplot stats methods
 #' @export wqs_perm
 #'
@@ -61,7 +62,7 @@
 #' library(gWQS)
 #'
 #' # mixture names
-#' PCBs <- names(wqs_data)[1:34]
+#' PCBs <- names(wqs_data)[1:17] #half of the original 34 for quick computation
 #' 
 #' # create reference wqs object with 5 bootstraps
 #' wqs_main <- gwqs(yLBX ~ wqs, mix_name = PCBs, data = wqs_data, q = 10, 
@@ -326,7 +327,8 @@ wqs_perm <- function(model, niter = 200, boots = NULL, b1_pos = TRUE,
   results <- list(gwqs_main = model, 
                   family = model$family$family,
                   gwqs_perm = ret_ref_wqs, 
-                  perm_test = perm_retlist)
+                  perm_test = perm_retlist,
+                  seed = seed)
   
   class(results) <- "wqs_perm"
   

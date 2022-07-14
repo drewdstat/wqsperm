@@ -19,8 +19,9 @@
 #' should be performed. 
 #' @param niter Number of permutation test iterations. 
 #' @param seed An integer to fix the seed. This will only impact the the initial 
-#' WQS regression run and not the permutation test iterations. If seed is set to
-#' NULL, a random seed will be chosen and saved in function output.
+#' WQS regression run and not the permutation test iterations. The default 
+#' setting is NULL, which means no seed is used for the initial WQS regression. 
+#' The seed will be saved in the function output.
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose 
 #' among "sequential", "transparent", "multisession", "multicore", "multiprocess", 
 #' "cluster" and "remote." See gWQS documentation for full details. 
@@ -73,8 +74,6 @@ wqs_full_perm <- function(formula, data, mix_name, q = 10, b_main = 1000,
                           rs = FALSE, niter = 200, seed = NULL, 
                           family = "gaussian", plan_strategy = "multicore",
                           stop_if_nonsig = FALSE, stop_thresh = 0.05, ...){
-  
-  if(is.null(seed)) seed<-sample(1:1E6,1)
   
   # run main WQS regression
   gwqs_res_main <- gWQS::gwqs(formula = formula, data = data, mix_name = mix_name, 

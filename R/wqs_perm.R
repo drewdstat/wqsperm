@@ -54,7 +54,6 @@
 #' \item{gwqs_perm}{Permutation test reference gWQS object (NULL if model 
 #' `family = "binomial"` or if same number of bootstraps are used in permutation 
 #' test WQS regression runs as in the main run).}
-#' \item{seed}{Seed used for the permutation test reference WQS regression (gwqs_perm).}
 #' @import gWQS ggplot2 viridis cowplot stats methods
 #' @export wqs_perm
 #'

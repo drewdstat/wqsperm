@@ -21,7 +21,7 @@
 #' @param seed An integer to fix the seed. This will only impact the the initial 
 #' WQS regression run and not the permutation test iterations. The default 
 #' setting is NULL, which means no seed is used for the initial WQS regression. 
-#' The seed will be saved in the function output.
+#' The seed will be saved in the "gwqs_main" object as "gwqs_main$seed".
 #' @param plan_strategy Evaluation strategy for the plan function. You can choose 
 #' among "sequential", "transparent", "multisession", "multicore", "multiprocess", 
 #' "cluster" and "remote." See gWQS documentation for full details. 

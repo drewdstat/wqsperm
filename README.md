@@ -6,7 +6,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of wqsperm is to implement a permutation test method for the
+The goal of wqspt is to implement a permutation test method for the
 weighted quantile sum (WQS) regression.
 
 Weighted quantile sum regression is a statistical technique to evaluate
@@ -33,16 +33,16 @@ more in detail
 
 ## Installation
 
-You can install the development version of wqsperm from
+You can install the development version of wqspt from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("drewdstat/wqsperm")
+devtools::install_github("drewdstat/wqspt")
 ```
 
 ## Usage
 
 Here is a [brief tutorial
-vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqsperm/blob/main/vignettes/introduction.html)
-on how to use the wqsperm package.
+vignette](http://htmlpreview.github.io/?https://github.com/jpspeng/wqspt/blob/main/vignettes/introduction.html)
+on how to use the wqspt package.
